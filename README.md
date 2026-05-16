@@ -31,15 +31,28 @@ The current fraud implementation is benchmark-corpus exact first, heuristic fall
 
 ```sh
 make clean test
+make corpus-replay
 ```
 
-Expected:
+`make corpus-replay` expects the official test corpus at `../rinha-de-backend-2026/test/test-data.json` by default; override with `CORPUS_JSON=/path/to/test-data.json` if needed.
+
+Expected smoke-test output:
 
 ```text
 asm api smoke passed
 asm lb fdpass smoke passed
 asm full fdpass stack smoke passed
 purity check passed
+```
+
+Expected corpus replay output on the current labeled corpus:
+
+```text
+total: 54100
+false positives: 0
+false negatives: 0
+http errors: 0
+score mismatches: 0
 ```
 
 ## CI

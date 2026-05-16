@@ -7,7 +7,9 @@ LDFLAGS ?= -nostdlib -static
 API_SRC := src/api/main.S
 LB_SRC := src/lb/main.S
 
-.PHONY: all api lb test smoke smoke-api smoke-lb smoke-stack clean
+.PHONY: all api lb test smoke smoke-api smoke-lb smoke-stack corpus-replay clean
+
+CORPUS_JSON ?= ../rinha-de-backend-2026/test/test-data.json
 
 all: api lb
 
@@ -42,6 +44,9 @@ smoke-stack: api lb
 
 test: all smoke
 	python3 tests/check_purity.py
+
+corpus-replay: api
+	python3 tests/corpus_replay.py ./$(BUILD_DIR)/api $(CORPUS_JSON)
 
 clean:
 	rm -rf $(BUILD_DIR)

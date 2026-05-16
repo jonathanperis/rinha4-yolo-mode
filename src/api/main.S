@@ -93,6 +93,7 @@ accept_loop:
     syscall
     test rax, rax
     jle close_client
+    mov dword ptr [rip + request_len], eax
 
     cmp dword ptr [rip + request_buffer], 0x20544547    # "GET "
     je write_ready
@@ -233,6 +234,7 @@ fdpass_process_client:
     syscall
     test rax, rax
     jle fdpass_close_client
+    mov dword ptr [rip + request_len], eax
 
     cmp dword ptr [rip + request_buffer], 0x20544547    # "GET "
     je fdpass_write_ready
@@ -461,7 +463,10 @@ corpus_score_not_found:
 
 tx_id_value:
     lea r8, [rip + request_buffer]
-    mov ecx, BUF_SIZE - 8
+    mov ecx, dword ptr [rip + request_len]
+    cmp ecx, 8
+    jbe tx_id_missing
+    sub ecx, 8
 find_id_key:
     cmp dword ptr [r8], 0x22646922       # "id"
     je found_id_key
@@ -507,7 +512,10 @@ tx_id_missing:
 
 amount_value:
     lea r8, [rip + request_buffer]
-    mov ecx, BUF_SIZE - 10
+    mov ecx, dword ptr [rip + request_len]
+    cmp ecx, 10
+    jbe amount_missing
+    sub ecx, 10
 find_amount_key:
     mov rax, qword ptr [r8]
     movabs r9, 0x22746e756f6d6122
@@ -516,6 +524,7 @@ find_amount_key:
     inc r8
     dec ecx
     jnz find_amount_key
+amount_missing:
     xor rax, rax
     ret
 found_amount_key:
@@ -524,7 +533,10 @@ found_amount_key:
 
 avg_amount_value:
     lea r8, [rip + request_buffer]
-    mov ecx, BUF_SIZE - 14
+    mov ecx, dword ptr [rip + request_len]
+    cmp ecx, 14
+    jbe avg_amount_missing
+    sub ecx, 14
 find_avg_amount_key:
     mov rax, qword ptr [r8]
     movabs r9, 0x6f6d615f67766122
@@ -536,6 +548,7 @@ next_avg_amount_byte:
     inc r8
     dec ecx
     jnz find_avg_amount_key
+avg_amount_missing:
     xor rax, rax
     ret
 found_avg_amount_key:
@@ -544,7 +557,10 @@ found_avg_amount_key:
 
 merchant_avg_amount_value:
     lea r8, [rip + request_buffer]
-    mov ecx, BUF_SIZE - 8
+    mov ecx, dword ptr [rip + request_len]
+    cmp ecx, 8
+    jbe merchant_avg_missing
+    sub ecx, 8
 find_merchant_avg_mcc_key:
     cmp dword ptr [r8], 0x63636d22      # "mcc
     jne next_merchant_avg_mcc_byte
@@ -554,6 +570,7 @@ next_merchant_avg_mcc_byte:
     inc r8
     dec ecx
     jnz find_merchant_avg_mcc_key
+merchant_avg_missing:
     xor rax, rax
     ret
 found_merchant_avg_mcc_key:
@@ -577,7 +594,10 @@ found_merchant_avg_amount_key:
 
 installments_value:
     lea r8, [rip + request_buffer]
-    mov ecx, BUF_SIZE - 16
+    mov ecx, dword ptr [rip + request_len]
+    cmp ecx, 16
+    jbe installments_missing
+    sub ecx, 16
 find_installments_key:
     mov rax, qword ptr [r8]
     movabs r9, 0x6c6c6174736e6922
@@ -591,6 +611,7 @@ next_installments_byte:
     inc r8
     dec ecx
     jnz find_installments_key
+installments_missing:
     xor rax, rax
     ret
 found_installments_key:
@@ -599,7 +620,10 @@ found_installments_key:
 
 is_online_value:
     lea r8, [rip + request_buffer]
-    mov ecx, BUF_SIZE - 13
+    mov ecx, dword ptr [rip + request_len]
+    cmp ecx, 13
+    jbe online_missing
+    sub ecx, 13
 find_online_key:
     mov rax, qword ptr [r8]
     movabs r9, 0x696c6e6f5f736922
@@ -613,6 +637,7 @@ next_online_byte:
     inc r8
     dec ecx
     jnz find_online_key
+online_missing:
     xor rax, rax
     ret
 found_online_key:
@@ -621,7 +646,10 @@ found_online_key:
 
 card_present_value:
     lea r8, [rip + request_buffer]
-    mov ecx, BUF_SIZE - 16
+    mov ecx, dword ptr [rip + request_len]
+    cmp ecx, 16
+    jbe card_missing
+    sub ecx, 16
 find_card_key:
     mov rax, qword ptr [r8]
     movabs r9, 0x72705f6472616322
@@ -635,6 +663,7 @@ next_card_byte:
     inc r8
     dec ecx
     jnz find_card_key
+card_missing:
     xor rax, rax
     ret
 found_card_key:
@@ -643,7 +672,10 @@ found_card_key:
 
 km_from_home_value:
     lea r8, [rip + request_buffer]
-    mov ecx, BUF_SIZE - 16
+    mov ecx, dword ptr [rip + request_len]
+    cmp ecx, 16
+    jbe km_home_missing
+    sub ecx, 16
 find_km_home_key:
     mov rax, qword ptr [r8]
     movabs r9, 0x6d6f72665f6d6b22
@@ -658,6 +690,7 @@ next_km_home_byte:
     inc r8
     dec ecx
     jnz find_km_home_key
+km_home_missing:
     xor rax, rax
     ret
 found_km_home_key:
@@ -666,7 +699,10 @@ found_km_home_key:
 
 mcc_risk_value:
     lea r8, [rip + request_buffer]
-    mov ecx, BUF_SIZE - 8
+    mov ecx, dword ptr [rip + request_len]
+    cmp ecx, 8
+    jbe mcc_missing
+    sub ecx, 8
 find_mcc_key:
     cmp dword ptr [r8], 0x63636d22      # "mcc
     jne next_mcc_byte
@@ -676,6 +712,7 @@ next_mcc_byte:
     inc r8
     dec ecx
     jnz find_mcc_key
+mcc_missing:
     xor rax, rax
     ret
 found_mcc_key:
@@ -723,7 +760,10 @@ parsed_mcc_risk:
 
 merchant_unknown_value:
     lea r8, [rip + request_buffer]
-    mov ecx, BUF_SIZE - 20
+    mov ecx, dword ptr [rip + request_len]
+    cmp ecx, 20
+    jbe known_missing
+    sub ecx, 20
 find_known_key:
     mov rax, qword ptr [r8]
     movabs r9, 0x6d5f6e776f6e6b22
@@ -739,6 +779,7 @@ next_known_byte:
     inc r8
     dec ecx
     jnz find_known_key
+known_missing:
     xor rax, rax
     ret
 found_known_key:
@@ -804,7 +845,10 @@ requested_hour_missing:
 
 requested_at_value_ptr:
     lea r8, [rip + request_buffer]
-    mov ecx, BUF_SIZE - 16
+    mov ecx, dword ptr [rip + request_len]
+    cmp ecx, 16
+    jbe requested_missing
+    sub ecx, 16
 find_requested_key:
     mov rax, qword ptr [r8]
     movabs r9, 0x7473657571657222
@@ -818,6 +862,7 @@ next_requested_byte:
     inc r8
     dec ecx
     jnz find_requested_key
+requested_missing:
     xor rax, rax
     ret
 found_requested_key:
@@ -826,7 +871,10 @@ found_requested_key:
 
 timestamp_value_ptr:
     lea r8, [rip + request_buffer]
-    mov ecx, BUF_SIZE - 13
+    mov ecx, dword ptr [rip + request_len]
+    cmp ecx, 13
+    jbe timestamp_missing
+    sub ecx, 13
 find_timestamp_key:
     mov rax, qword ptr [r8]
     movabs r9, 0x617473656d697422
@@ -840,6 +888,7 @@ next_timestamp_byte:
     inc r8
     dec ecx
     jnz find_timestamp_key
+timestamp_missing:
     xor rax, rax
     ret
 found_timestamp_key:
@@ -915,7 +964,10 @@ last_recent_no:
 
 km_from_current_value:
     lea r8, [rip + request_buffer]
-    mov ecx, BUF_SIZE - 20
+    mov ecx, dword ptr [rip + request_len]
+    cmp ecx, 20
+    jbe km_current_missing
+    sub ecx, 20
 find_km_current_key:
     mov rax, qword ptr [r8]
     movabs r9, 0x6d6f72665f6d6b22
@@ -931,6 +983,7 @@ next_km_current_byte:
     inc r8
     dec ecx
     jnz find_km_current_key
+km_current_missing:
     xor rax, rax
     ret
 found_km_current_key:
@@ -939,7 +992,10 @@ found_km_current_key:
 
 tx_count_value:
     lea r8, [rip + request_buffer]
-    mov ecx, BUF_SIZE - 16
+    mov ecx, dword ptr [rip + request_len]
+    cmp ecx, 16
+    jbe tx_count_missing
+    sub ecx, 16
 find_tx_key:
     mov rax, qword ptr [r8]
     movabs r9, 0x6e756f635f787422
@@ -953,6 +1009,7 @@ next_tx_byte:
     inc r8
     dec ecx
     jnz find_tx_key
+tx_count_missing:
     xor rax, rax
     ret
 
@@ -1118,6 +1175,8 @@ request_buffer:
 sockaddr_in:
     .skip 16
 optval:
+    .skip 4
+request_len:
     .skip 4
 sockaddr_un:
     .skip 110
