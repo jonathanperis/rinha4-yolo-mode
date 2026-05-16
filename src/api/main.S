@@ -371,12 +371,10 @@ score_dispatch_capped:
     je choose_fraud0
     cmp r11d, 1
     je choose_fraud1
-    cmp r11d, 2
-    je choose_fraud2
     cmp r11d, 3
-    je choose_fraud3
+    jbe choose_fraud2          # keep 3-signal heuristic hits approved (0.4)
     cmp r11d, 4
-    je choose_fraud4
+    je choose_fraud3          # 4 signals cross approval threshold at 0.6
     jmp choose_fraud5
 choose_fraud0:
     lea rsi, [rip + fraud0_response]

@@ -51,6 +51,14 @@ try:
 
     data = post(b'{"id":"merchant-geo-risk","transaction":{"amount":100,"installments":1},"customer":{"avg_amount":100,"tx_count_24h":0,"known_merchants":["MERC-001"]},"merchant":{"id":"MERC-999","mcc":"7995","avg_amount":100},"terminal":{"is_online":false,"card_present":true,"km_from_home":700}}')
     assert b"HTTP/1.1 200 OK" in data, data
+    assert b'{"approved":true,"fraud_score":0.4}' in data, data
+
+    data = post(b'{"id":"official-legit-count3","transaction":{"amount":485,"installments":1,"requested_at":"2026-03-27T13:11:06Z"},"customer":{"avg_amount":971,"tx_count_24h":2,"known_merchants":["MERC-004","MERC-016","MERC-014","MERC-019","MERC-010"]},"merchant":{"id":"MERC-014","mcc":"5812","avg_amount":67},"terminal":{"is_online":true,"card_present":false,"km_from_home":2},"last_transaction":{"timestamp":"2026-03-27T08:35:06Z","km_from_current":14}}')
+    assert b"HTTP/1.1 200 OK" in data, data
+    assert b'{"approved":true,"fraud_score":0.4}' in data, data
+
+    data = post(b'{"id":"official-fraud-count4","transaction":{"amount":1167,"installments":6,"requested_at":"2026-03-27T06:43:05Z"},"customer":{"avg_amount":158,"tx_count_24h":6,"known_merchants":["MERC-018","MERC-015"]},"merchant":{"id":"MERC-015","mcc":"4511","avg_amount":179},"terminal":{"is_online":true,"card_present":false,"km_from_home":322},"last_transaction":{"timestamp":"2026-03-27T05:44:05Z","km_from_current":119}}')
+    assert b"HTTP/1.1 200 OK" in data, data
     assert b'{"approved":false,"fraud_score":0.6}' in data, data
 
     data = post(b'{"id":"time-risk","transaction":{"amount":100,"installments":1,"requested_at":"2026-03-11T02:23:35Z"},"customer":{"tx_count_24h":0},"terminal":{"is_online":false,"card_present":true}}')
@@ -67,7 +75,7 @@ try:
 
     data = post(b'{"id":"terminal-risk","transaction":{"amount":100,"installments":1},"customer":{"tx_count_24h":20},"terminal":{"is_online":true,"card_present":false}}')
     assert b"HTTP/1.1 200 OK" in data, data
-    assert b'{"approved":false,"fraud_score":0.8}' in data, data
+    assert b'{"approved":false,"fraud_score":0.6}' in data, data
 
     data = post(b'{"id":"full-risk","transaction":{"amount":10000,"installments":12},"customer":{"tx_count_24h":20},"terminal":{"is_online":true,"card_present":false}}')
     assert b"HTTP/1.1 200 OK" in data, data
