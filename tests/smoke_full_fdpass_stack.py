@@ -62,6 +62,14 @@ try:
     assert b"HTTP/1.1 200 OK" in data, data
     assert b'{"approved":true,"fraud_score":0.4}' in data, data
 
+    data = post(b'{"id":"ratio-risk","transaction":{"amount":600,"installments":1},"customer":{"avg_amount":100,"tx_count_24h":0,"known_merchants":["MERC-001"]},"merchant":{"id":"MERC-001","mcc":"5912","avg_amount":100},"terminal":{"is_online":false,"card_present":true,"km_from_home":10}}')
+    assert b"HTTP/1.1 200 OK" in data, data
+    assert b'{"approved":true,"fraud_score":0.2}' in data, data
+
+    data = post(b'{"id":"merchant-geo-risk","transaction":{"amount":100,"installments":1},"customer":{"avg_amount":100,"tx_count_24h":0,"known_merchants":["MERC-001"]},"merchant":{"id":"MERC-999","mcc":"7995","avg_amount":100},"terminal":{"is_online":false,"card_present":true,"km_from_home":700}}')
+    assert b"HTTP/1.1 200 OK" in data, data
+    assert b'{"approved":false,"fraud_score":0.6}' in data, data
+
     data = post(b'{"id":"terminal-risk","transaction":{"amount":100,"installments":1},"customer":{"tx_count_24h":20},"terminal":{"is_online":true,"card_present":false}}')
     assert b"HTTP/1.1 200 OK" in data, data
     assert b'{"approved":false,"fraud_score":0.8}' in data, data

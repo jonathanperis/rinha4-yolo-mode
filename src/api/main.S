@@ -81,6 +81,11 @@ accept_loop:
     js accept_loop
     mov r13, rax
 
+    lea rdi, [rip + request_buffer]
+    xor eax, eax
+    mov ecx, BUF_SIZE / 8
+    rep stosq
+
     mov rax, SYS_READ
     mov rdi, r13
     lea rsi, [rip + request_buffer]
@@ -216,6 +221,11 @@ recv_fd_fail:
     ret
 
 fdpass_process_client:
+    lea rdi, [rip + request_buffer]
+    xor eax, eax
+    mov ecx, BUF_SIZE / 8
+    rep stosq
+
     mov rax, SYS_READ
     mov rdi, r13
     lea rsi, [rip + request_buffer]
@@ -272,6 +282,7 @@ score_tx_high:
 
 score_amount:
     call amount_value
+    mov r10d, eax
     cmp eax, 10000
     jb score_installments
     inc r11d
@@ -291,7 +302,34 @@ score_online:
 score_card_present:
     call card_present_value
     test eax, eax
-    jnz score_dispatch
+    jnz score_avg_ratio
+    inc r11d
+
+score_avg_ratio:
+    call avg_amount_value
+    test eax, eax
+    jz score_km_home
+    imul eax, eax, 5
+    cmp r10d, eax
+    jb score_km_home
+    inc r11d
+
+score_km_home:
+    call km_from_home_value
+    cmp eax, 500
+    jb score_mcc
+    inc r11d
+
+score_mcc:
+    call mcc_risk_value
+    test eax, eax
+    jz score_known_merchant
+    inc r11d
+
+score_known_merchant:
+    call merchant_unknown_value
+    test eax, eax
+    jz score_dispatch
     inc r11d
 
 score_dispatch:
@@ -350,6 +388,26 @@ find_amount_key:
     ret
 found_amount_key:
     add r8, 8
+    jmp parse_number_after_key
+
+avg_amount_value:
+    lea r8, [rip + request_buffer]
+    mov ecx, BUF_SIZE - 14
+find_avg_amount_key:
+    mov rax, qword ptr [r8]
+    movabs r9, 0x6f6d615f67766122
+    cmp rax, r9                         # "avg_amo
+    jne next_avg_amount_byte
+    cmp dword ptr [r8 + 8], 0x22746e75  # unt"
+    je found_avg_amount_key
+next_avg_amount_byte:
+    inc r8
+    dec ecx
+    jnz find_avg_amount_key
+    xor rax, rax
+    ret
+found_avg_amount_key:
+    add r8, 12
     jmp parse_number_after_key
 
 installments_value:
@@ -417,6 +475,143 @@ next_card_byte:
 found_card_key:
     add r8, 14
     jmp parse_bool_after_key
+
+km_from_home_value:
+    lea r8, [rip + request_buffer]
+    mov ecx, BUF_SIZE - 16
+find_km_home_key:
+    mov rax, qword ptr [r8]
+    movabs r9, 0x6d6f72665f6d6b22
+    cmp rax, r9                         # "km_from
+    jne next_km_home_byte
+    cmp dword ptr [r8 + 8], 0x6d6f685f  # _hom
+    jne next_km_home_byte
+    cmp word ptr [r8 + 12], 0x2265      # e"
+    jne next_km_home_byte
+    jmp found_km_home_key
+next_km_home_byte:
+    inc r8
+    dec ecx
+    jnz find_km_home_key
+    xor rax, rax
+    ret
+found_km_home_key:
+    add r8, 14
+    jmp parse_number_after_key
+
+mcc_risk_value:
+    lea r8, [rip + request_buffer]
+    mov ecx, BUF_SIZE - 8
+find_mcc_key:
+    cmp dword ptr [r8], 0x63636d22      # "mcc
+    jne next_mcc_byte
+    cmp byte ptr [r8 + 4], '"'
+    je found_mcc_key
+next_mcc_byte:
+    inc r8
+    dec ecx
+    jnz find_mcc_key
+    xor rax, rax
+    ret
+found_mcc_key:
+    add r8, 5
+    mov ecx, 64
+find_mcc_colon:
+    cmp byte ptr [r8], ':'
+    je found_mcc_colon
+    inc r8
+    dec ecx
+    jnz find_mcc_colon
+    xor rax, rax
+    ret
+found_mcc_colon:
+    inc r8
+skip_mcc_ws:
+    mov al, byte ptr [r8]
+    cmp al, ' '
+    je advance_mcc_ws
+    cmp al, 9
+    je advance_mcc_ws
+    cmp al, '"'
+    je advance_mcc_ws
+    jmp check_mcc_risk
+advance_mcc_ws:
+    inc r8
+    jmp skip_mcc_ws
+check_mcc_risk:
+    cmp dword ptr [r8], 0x35393937      # 7995
+    je parsed_mcc_risk
+    xor rax, rax
+    ret
+parsed_mcc_risk:
+    mov eax, 1
+    ret
+
+merchant_unknown_value:
+    lea r8, [rip + request_buffer]
+    mov ecx, BUF_SIZE - 20
+find_known_key:
+    mov rax, qword ptr [r8]
+    movabs r9, 0x6d5f6e776f6e6b22
+    cmp rax, r9                         # "known_m
+    jne next_known_byte
+    mov rax, qword ptr [r8 + 8]
+    movabs r9, 0x73746e6168637265
+    cmp rax, r9                         # erchants
+    jne next_known_byte
+    cmp byte ptr [r8 + 16], '"'
+    je found_known_key
+next_known_byte:
+    inc r8
+    dec ecx
+    jnz find_known_key
+    xor rax, rax
+    ret
+found_known_key:
+    add r8, 17
+find_known_open:
+    cmp byte ptr [r8], '['
+    je found_known_open
+    inc r8
+    jmp find_known_open
+found_known_open:
+    mov r9, r8                          # known array start
+find_known_close:
+    cmp byte ptr [r8], ']'
+    je found_known_close
+    inc r8
+    jmp find_known_close
+found_known_close:
+    mov r10, r8                         # known array end
+    mov r8, r10
+    mov ecx, 512
+find_merchant_id_prefix:
+    cmp dword ptr [r8], 0x4352454d      # MERC
+    jne next_merchant_id_prefix
+    cmp byte ptr [r8 + 4], '-'
+    je found_merchant_id_prefix
+next_merchant_id_prefix:
+    inc r8
+    dec ecx
+    jnz find_merchant_id_prefix
+    xor rax, rax
+    ret
+found_merchant_id_prefix:
+    mov edx, dword ptr [r8 + 5]         # three digits plus closing quote
+    mov r8, r9
+scan_known_for_id:
+    cmp r8, r10
+    jae merchant_id_unknown
+    cmp dword ptr [r8], edx
+    je merchant_id_known
+    inc r8
+    jmp scan_known_for_id
+merchant_id_known:
+    xor rax, rax
+    ret
+merchant_id_unknown:
+    mov eax, 1
+    ret
 
 tx_count_value:
     lea r8, [rip + request_buffer]
