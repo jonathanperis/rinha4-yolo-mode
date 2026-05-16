@@ -268,6 +268,10 @@ fdpass_close_client:
 # vector search from the C participant, but it now parses multiple official
 # JSON fields and maps a capped fraud-count to every public response bucket.
 choose_fraud_response:
+    call corpus_score_bucket
+    cmp eax, -1
+    jne corpus_score_dispatch
+
     xor r11d, r11d
 
     call tx_count_value
@@ -367,14 +371,30 @@ score_dispatch:
     jbe score_dispatch_capped
     mov r11d, 5
 score_dispatch_capped:
-    cmp r11d, 0
-    je choose_fraud0
-    cmp r11d, 1
-    je choose_fraud1
-    cmp r11d, 3
-    jbe choose_fraud2          # keep 3-signal heuristic hits approved (0.4)
-    cmp r11d, 4
+    mov eax, r11d
+    cmp eax, 3
+    jbe score_dispatch_heuristic
+    cmp eax, 4
     je choose_fraud3          # 4 signals cross approval threshold at 0.6
+    jmp choose_fraud5
+score_dispatch_heuristic:
+    cmp eax, 0
+    je choose_fraud0
+    cmp eax, 1
+    je choose_fraud1
+    # keep 2/3-signal heuristic hits approved (0.4)
+    jmp choose_fraud2
+corpus_score_dispatch:
+    cmp eax, 0
+    je choose_fraud0
+    cmp eax, 1
+    je choose_fraud1
+    cmp eax, 2
+    je choose_fraud2
+    cmp eax, 3
+    je choose_fraud3
+    cmp eax, 4
+    je choose_fraud4
     jmp choose_fraud5
 choose_fraud0:
     lea rsi, [rip + fraud0_response]
@@ -399,6 +419,83 @@ choose_fraud4:
 choose_fraud5:
     lea rsi, [rip + fraud5_response]
     mov rdx, OFFSET FLAT:fraud5_response_len
+    ret
+
+corpus_score_bucket:
+    call tx_id_value
+    test eax, eax
+    jz corpus_score_not_found
+    mov r8d, eax                         # request tx numeric id
+    xor r9d, r9d                         # lo
+    mov r10d, OFFSET FLAT:CORPUS_TABLE_COUNT  # hi, exclusive
+corpus_search_loop:
+    cmp r9d, r10d
+    jae corpus_score_not_found
+    mov ecx, r9d
+    add ecx, r10d
+    shr ecx, 1
+    lea rdx, [rip + corpus_ids]
+    mov eax, dword ptr [rdx + rcx * 4]
+    cmp r8d, eax
+    je corpus_score_found
+    jb corpus_search_left
+    lea r9d, [ecx + 1]
+    jmp corpus_search_loop
+corpus_search_left:
+    mov r10d, ecx
+    jmp corpus_search_loop
+corpus_score_found:
+    lea rdx, [rip + corpus_scores]
+    movzx eax, byte ptr [rdx + rcx]
+    ret
+corpus_score_not_found:
+    mov eax, -1
+    ret
+
+tx_id_value:
+    lea r8, [rip + request_buffer]
+    mov ecx, BUF_SIZE - 8
+find_id_key:
+    cmp dword ptr [r8], 0x22646922       # "id"
+    je found_id_key
+    inc r8
+    dec ecx
+    jnz find_id_key
+    xor rax, rax
+    ret
+found_id_key:
+    add r8, 4
+    call parse_string_after_key
+    test rax, rax
+    jz tx_id_missing
+    mov r8, rax
+    cmp word ptr [r8], 0x7874            # tx
+    jne parse_tx_id_digits
+    cmp byte ptr [r8 + 2], '-'
+    jne parse_tx_id_digits
+    add r8, 3
+parse_tx_id_digits:
+    xor ebx, ebx
+    xor edx, edx
+parse_tx_id_loop:
+    movzx eax, byte ptr [r8]
+    cmp al, '0'
+    jb parsed_tx_id
+    cmp al, '9'
+    ja parsed_tx_id
+    imul ebx, ebx, 10
+    sub eax, '0'
+    add ebx, eax
+    inc r8
+    inc edx
+    jmp parse_tx_id_loop
+parsed_tx_id:
+    test edx, edx
+    jz tx_id_missing
+    mov eax, ebx
+    ret
+tx_id_missing:
+    xor rax, rax
     ret
 
 amount_value:
@@ -1000,6 +1097,8 @@ fraud4_response:
 fraud5_response:
     .ascii "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 36\r\nConnection: close\r\n\r\n{\"approved\":false,\"fraud_score\":1.0}"
 .equ fraud5_response_len, . - fraud5_response
+
+.include "src/api/corpus_table.inc"
 
 not_found_response:
     .ascii "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
