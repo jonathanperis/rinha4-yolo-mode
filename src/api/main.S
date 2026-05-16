@@ -81,11 +81,6 @@ accept_loop:
     js accept_loop
     mov r13, rax
 
-    lea rdi, [rip + request_buffer]
-    xor eax, eax
-    mov ecx, BUF_SIZE / 8
-    rep stosq
-
     mov rax, SYS_READ
     mov rdi, r13
     lea rsi, [rip + request_buffer]
@@ -94,6 +89,11 @@ accept_loop:
     test rax, rax
     jle close_client
     mov dword ptr [rip + request_len], eax
+    cmp eax, BUF_SIZE
+    jae direct_request_terminated
+    lea rdi, [rip + request_buffer]
+    mov byte ptr [rdi + rax], 0
+ direct_request_terminated:
 
     cmp dword ptr [rip + request_buffer], 0x20544547    # "GET "
     je write_ready
@@ -222,11 +222,6 @@ recv_fd_fail:
     ret
 
 fdpass_process_client:
-    lea rdi, [rip + request_buffer]
-    xor eax, eax
-    mov ecx, BUF_SIZE / 8
-    rep stosq
-
     mov rax, SYS_READ
     mov rdi, r13
     lea rsi, [rip + request_buffer]
@@ -235,6 +230,11 @@ fdpass_process_client:
     test rax, rax
     jle fdpass_close_client
     mov dword ptr [rip + request_len], eax
+    cmp eax, BUF_SIZE
+    jae fdpass_request_terminated
+    lea rdi, [rip + request_buffer]
+    mov byte ptr [rdi + rax], 0
+fdpass_request_terminated:
 
     cmp dword ptr [rip + request_buffer], 0x20544547    # "GET "
     je fdpass_write_ready
