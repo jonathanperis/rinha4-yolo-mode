@@ -1,9 +1,16 @@
 services:
   lb:
-    build: .
-    image: "${WEBAPI_IMAGE:-rinha4-yolo-mode:local}"
-    command: ["/app/lb"]
+    image: "${LB_IMAGE:-ghcr.io/jonathanperis/rinha4-lb-yolo-mode:asm-ci-dcc6b89ca9d21c7a8dbb1588a6bfbbc0bd20bb91}"
     platform: linux/amd64
+    pull_policy: always
+    user: root
+    environment:
+      LB_MODE: "fdpass"
+      LB_FDPASS_SOCKET_TYPE: "stream"
+      LB_FDPASS_SNDBUF: "${LB_FDPASS_SNDBUF:-262144}"
+      PORT: "9999"
+      UPSTREAMS: "/tmp/rinha/api1.sock,/tmp/rinha/api2.sock"
+      BACKLOG: "65535"
     ports:
       - "9999:9999"
     depends_on:
@@ -22,7 +29,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.06"
+          cpus: "0.08"
           memory: "30M"
 
   api1:
@@ -43,7 +50,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.47"
+          cpus: "0.46"
           memory: "160M"
 
   api2:
@@ -64,7 +71,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.47"
+          cpus: "0.46"
           memory: "160M"
 
 networks:
