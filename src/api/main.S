@@ -374,30 +374,26 @@ score_dispatch:
     mov r11d, 5
 score_dispatch_capped:
     mov eax, r11d
-    cmp eax, 3
-    jbe score_dispatch_heuristic
-    cmp eax, 4
-    je choose_fraud3          # 4 signals cross approval threshold at 0.6
-    jmp choose_fraud5
-score_dispatch_heuristic:
-    cmp eax, 0
-    je choose_fraud0
-    cmp eax, 1
-    je choose_fraud1
-    # keep 2/3-signal heuristic hits approved (0.4)
-    jmp choose_fraud2
-corpus_score_dispatch:
-    cmp eax, 0
-    je choose_fraud0
-    cmp eax, 1
-    je choose_fraud1
     cmp eax, 2
-    je choose_fraud2
+    jbe choose_fraud_by_bucket
     cmp eax, 3
-    je choose_fraud3
+    jne score_dispatch_not_three
+    # keep 3-signal heuristic hits approved (0.4)
+    mov eax, 2
+    jmp choose_fraud_by_bucket
+score_dispatch_not_three:
     cmp eax, 4
-    je choose_fraud4
-    jmp choose_fraud5
+    jne choose_fraud_by_bucket # 5 signals stay at 1.0
+    mov eax, 3                 # 4 signals cross approval threshold at 0.6
+    jmp choose_fraud_by_bucket
+corpus_score_dispatch:
+    jmp choose_fraud_by_bucket
+choose_fraud_by_bucket:
+    lea r8, [rip + fraud_response_ptrs]
+    mov rsi, qword ptr [r8 + rax * 8]
+    lea r8, [rip + fraud_response_lens]
+    mov edx, dword ptr [r8 + rax * 4]
+    ret
 choose_fraud0:
     lea rsi, [rip + fraud0_response]
     mov rdx, OFFSET FLAT:fraud0_response_len
@@ -1161,6 +1157,16 @@ fraud4_response:
 fraud5_response:
     .ascii "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 36\r\nConnection: close\r\n\r\n{\"approved\":false,\"fraud_score\":1.0}"
 .equ fraud5_response_len, . - fraud5_response
+
+.align 8
+fraud_response_ptrs:
+    .quad fraud0_response, fraud1_response, fraud2_response, fraud3_response
+    .quad fraud4_response, fraud5_response
+
+.align 4
+fraud_response_lens:
+    .long fraud0_response_len, fraud1_response_len, fraud2_response_len
+    .long fraud3_response_len, fraud4_response_len, fraud5_response_len
 
 .include "src/api/corpus_table.inc"
 
