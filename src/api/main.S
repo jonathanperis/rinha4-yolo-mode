@@ -425,7 +425,7 @@ corpus_score_bucket:
     jz corpus_score_not_found
     mov r8d, eax                         # request tx numeric id
     mov ecx, eax
-    shr ecx, 20                          # high 12 bits choose a small sorted bucket
+    shr ecx, 16                          # high 16 bits choose a tiny sorted bucket
     lea rdx, [rip + corpus_bucket_offsets]
     mov r9d, dword ptr [rdx + rcx * 4]   # lo
     mov r10d, dword ptr [rdx + rcx * 4 + 4] # hi, exclusive
@@ -458,6 +458,26 @@ corpus_score_not_found:
     ret
 
 tx_id_value:
+    lea r8, [rip + request_buffer]
+    mov ecx, dword ptr [rip + request_len]
+    cmp ecx, 10
+    jbe tx_id_generic_scan
+    sub ecx, 10
+    movabs r9, 0x74223a226469227b     # {"id":"t
+find_tx_body_prefix:
+    cmp qword ptr [r8], r9
+    je found_tx_body_prefix
+    inc r8
+    dec ecx
+    jnz find_tx_body_prefix
+    jmp tx_id_generic_scan
+found_tx_body_prefix:
+    cmp word ptr [r8 + 8], 0x2d78      # x-
+    jne tx_id_generic_scan
+    add r8, 10
+    jmp parse_tx_id_digits
+
+tx_id_generic_scan:
     lea r8, [rip + request_buffer]
     mov ecx, dword ptr [rip + request_len]
     cmp ecx, 8
