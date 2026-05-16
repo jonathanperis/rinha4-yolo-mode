@@ -254,28 +254,169 @@ fdpass_close_client:
     syscall
     ret
 
-# Minimal first assembly scorer: extract `"tx_count_24h"` and map high
-# transaction velocity to the same response buckets used by the C API:
-# 0-9 => fraud=0, 10-19 => fraud=3 (0.6), 20+ => fraud=5 (1.0).
-# This is intentionally a small, test-backed increment toward the full C
-# vectorizer/search path.
+# Test-backed assembly scorer increment. It still is not the final nearest-
+# vector search from the C participant, but it now parses multiple official
+# JSON fields and maps a capped fraud-count to every public response bucket.
 choose_fraud_response:
+    xor r11d, r11d
+
     call tx_count_value
     cmp eax, 20
-    jae choose_fraud5
+    jae score_tx_high
     cmp eax, 10
-    jae choose_fraud3
+    jb score_amount
+    inc r11d
+    jmp score_amount
+score_tx_high:
+    add r11d, 2
+
+score_amount:
+    call amount_value
+    cmp eax, 10000
+    jb score_installments
+    inc r11d
+
+score_installments:
+    call installments_value
+    cmp eax, 10
+    jb score_online
+    inc r11d
+
+score_online:
+    call is_online_value
+    test eax, eax
+    jz score_card_present
+    inc r11d
+
+score_card_present:
+    call card_present_value
+    test eax, eax
+    jnz score_dispatch
+    inc r11d
+
+score_dispatch:
+    cmp r11d, 5
+    jbe score_dispatch_capped
+    mov r11d, 5
+score_dispatch_capped:
+    cmp r11d, 0
+    je choose_fraud0
+    cmp r11d, 1
+    je choose_fraud1
+    cmp r11d, 2
+    je choose_fraud2
+    cmp r11d, 3
+    je choose_fraud3
+    cmp r11d, 4
+    je choose_fraud4
+    jmp choose_fraud5
+choose_fraud0:
     lea rsi, [rip + fraud0_response]
     mov rdx, OFFSET FLAT:fraud0_response_len
+    ret
+choose_fraud1:
+    lea rsi, [rip + fraud1_response]
+    mov rdx, OFFSET FLAT:fraud1_response_len
+    ret
+choose_fraud2:
+    lea rsi, [rip + fraud2_response]
+    mov rdx, OFFSET FLAT:fraud2_response_len
     ret
 choose_fraud3:
     lea rsi, [rip + fraud3_response]
     mov rdx, OFFSET FLAT:fraud3_response_len
     ret
+choose_fraud4:
+    lea rsi, [rip + fraud4_response]
+    mov rdx, OFFSET FLAT:fraud4_response_len
+    ret
 choose_fraud5:
     lea rsi, [rip + fraud5_response]
     mov rdx, OFFSET FLAT:fraud5_response_len
     ret
+
+amount_value:
+    lea r8, [rip + request_buffer]
+    mov ecx, BUF_SIZE - 10
+find_amount_key:
+    mov rax, qword ptr [r8]
+    movabs r9, 0x22746e756f6d6122
+    cmp rax, r9                         # "amount"
+    je found_amount_key
+    inc r8
+    dec ecx
+    jnz find_amount_key
+    xor rax, rax
+    ret
+found_amount_key:
+    add r8, 8
+    jmp parse_number_after_key
+
+installments_value:
+    lea r8, [rip + request_buffer]
+    mov ecx, BUF_SIZE - 16
+find_installments_key:
+    mov rax, qword ptr [r8]
+    movabs r9, 0x6c6c6174736e6922
+    cmp rax, r9                         # "install
+    jne next_installments_byte
+    cmp dword ptr [r8 + 8], 0x746e656d  # ment
+    jne next_installments_byte
+    cmp word ptr [r8 + 12], 0x2273      # s"
+    je found_installments_key
+next_installments_byte:
+    inc r8
+    dec ecx
+    jnz find_installments_key
+    xor rax, rax
+    ret
+found_installments_key:
+    add r8, 14
+    jmp parse_number_after_key
+
+is_online_value:
+    lea r8, [rip + request_buffer]
+    mov ecx, BUF_SIZE - 13
+find_online_key:
+    mov rax, qword ptr [r8]
+    movabs r9, 0x696c6e6f5f736922
+    cmp rax, r9                         # "is_onli
+    jne next_online_byte
+    cmp word ptr [r8 + 8], 0x656e       # ne
+    jne next_online_byte
+    cmp byte ptr [r8 + 10], '"'
+    je found_online_key
+next_online_byte:
+    inc r8
+    dec ecx
+    jnz find_online_key
+    xor rax, rax
+    ret
+found_online_key:
+    add r8, 11
+    jmp parse_bool_after_key
+
+card_present_value:
+    lea r8, [rip + request_buffer]
+    mov ecx, BUF_SIZE - 16
+find_card_key:
+    mov rax, qword ptr [r8]
+    movabs r9, 0x72705f6472616322
+    cmp rax, r9                         # "card_pr
+    jne next_card_byte
+    cmp dword ptr [r8 + 8], 0x6e657365  # esen
+    jne next_card_byte
+    cmp word ptr [r8 + 12], 0x2274      # t"
+    je found_card_key
+next_card_byte:
+    inc r8
+    dec ecx
+    jnz find_card_key
+    xor rax, rax
+    ret
+found_card_key:
+    add r8, 14
+    jmp parse_bool_after_key
 
 tx_count_value:
     lea r8, [rip + request_buffer]
@@ -298,6 +439,8 @@ next_tx_byte:
 
 found_tx_key:
     add r8, 14
+
+parse_number_after_key:
     mov ecx, 64
 find_tx_colon:
     cmp byte ptr [r8], ':'
@@ -340,6 +483,41 @@ parsed_tx_count:
     mov eax, ebx
     ret
 
+parse_bool_after_key:
+    mov ecx, 64
+find_bool_colon:
+    cmp byte ptr [r8], ':'
+    je found_bool_colon
+    inc r8
+    dec ecx
+    jnz find_bool_colon
+    xor rax, rax
+    ret
+found_bool_colon:
+    inc r8
+skip_bool_ws:
+    mov al, byte ptr [r8]
+    cmp al, ' '
+    je advance_bool_ws
+    cmp al, 9
+    je advance_bool_ws
+    cmp al, 10
+    je advance_bool_ws
+    cmp al, 13
+    je advance_bool_ws
+    jmp parse_bool_literal
+advance_bool_ws:
+    inc r8
+    jmp skip_bool_ws
+parse_bool_literal:
+    cmp dword ptr [r8], 0x65757274      # true
+    je parsed_bool_true
+    xor rax, rax
+    ret
+parsed_bool_true:
+    mov eax, 1
+    ret
+
 fatal:
     mov rax, SYS_EXIT
     mov rdi, 1
@@ -351,15 +529,27 @@ ready_response:
 .equ ready_response_len, . - ready_response
 
 fraud0_response:
-    .ascii "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 36\r\nConnection: close\r\n\r\n{\"approved\":true,\"fraud_score\":0.0}"
+    .ascii "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 35\r\nConnection: close\r\n\r\n{\"approved\":true,\"fraud_score\":0.0}"
 .equ fraud0_response_len, . - fraud0_response
 
+fraud1_response:
+    .ascii "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 35\r\nConnection: close\r\n\r\n{\"approved\":true,\"fraud_score\":0.2}"
+.equ fraud1_response_len, . - fraud1_response
+
+fraud2_response:
+    .ascii "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 35\r\nConnection: close\r\n\r\n{\"approved\":true,\"fraud_score\":0.4}"
+.equ fraud2_response_len, . - fraud2_response
+
 fraud3_response:
-    .ascii "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 37\r\nConnection: close\r\n\r\n{\"approved\":false,\"fraud_score\":0.6}"
+    .ascii "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 36\r\nConnection: close\r\n\r\n{\"approved\":false,\"fraud_score\":0.6}"
 .equ fraud3_response_len, . - fraud3_response
 
+fraud4_response:
+    .ascii "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 36\r\nConnection: close\r\n\r\n{\"approved\":false,\"fraud_score\":0.8}"
+.equ fraud4_response_len, . - fraud4_response
+
 fraud5_response:
-    .ascii "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 37\r\nConnection: close\r\n\r\n{\"approved\":false,\"fraud_score\":1.0}"
+    .ascii "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 36\r\nConnection: close\r\n\r\n{\"approved\":false,\"fraud_score\":1.0}"
 .equ fraud5_response_len, . - fraud5_response
 
 not_found_response:

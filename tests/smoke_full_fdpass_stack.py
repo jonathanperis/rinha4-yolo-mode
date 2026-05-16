@@ -50,15 +50,23 @@ try:
             s.sendall(req)
             return s.recv(2048)
 
-    data = post(b'{"id":"tx-smoke","tx_count_24h":0}')
+    data = post(b'{"id":"tx-smoke","transaction":{"amount":100,"installments":1},"customer":{"tx_count_24h":0},"terminal":{"is_online":false,"card_present":true}}')
     assert b"HTTP/1.1 200 OK" in data, data
     assert b'{"approved":true,"fraud_score":0.0}' in data, data
 
-    data = post(b'{"id":"tx-medium","tx_count_24h":10}')
+    data = post(b'{"id":"tx-medium","transaction":{"amount":100,"installments":1},"customer":{"tx_count_24h":10},"terminal":{"is_online":false,"card_present":true}}')
     assert b"HTTP/1.1 200 OK" in data, data
-    assert b'{"approved":false,"fraud_score":0.6}' in data, data
+    assert b'{"approved":true,"fraud_score":0.2}' in data, data
 
-    data = post(b'{"id":"tx-risk","tx_count_24h":20}')
+    data = post(b'{"id":"amount-installments","transaction":{"amount":10000,"installments":12},"customer":{"tx_count_24h":0},"terminal":{"is_online":false,"card_present":true}}')
+    assert b"HTTP/1.1 200 OK" in data, data
+    assert b'{"approved":true,"fraud_score":0.4}' in data, data
+
+    data = post(b'{"id":"terminal-risk","transaction":{"amount":100,"installments":1},"customer":{"tx_count_24h":20},"terminal":{"is_online":true,"card_present":false}}')
+    assert b"HTTP/1.1 200 OK" in data, data
+    assert b'{"approved":false,"fraud_score":0.8}' in data, data
+
+    data = post(b'{"id":"full-risk","transaction":{"amount":10000,"installments":12},"customer":{"tx_count_24h":20},"terminal":{"is_online":true,"card_present":false}}')
     assert b"HTTP/1.1 200 OK" in data, data
     assert b'{"approved":false,"fraud_score":1.0}' in data, data
 finally:
