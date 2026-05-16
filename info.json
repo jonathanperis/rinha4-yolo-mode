@@ -1,0 +1,19 @@
+{
+  "participants": [
+    "Jonathan Peris"
+  ],
+  "social": [
+    "https://github.com/jonathanperis"
+  ],
+  "source-code-repo": "https://github.com/jonathanperis/rinha4-yolo-mode",
+  "stack": [
+    "x86-64-assembly",
+    "linux-syscalls",
+    "epoll",
+    "unix-sockets",
+    "scm-rights",
+    "ivf",
+    "yolo"
+  ],
+  "open_to_work": false
+}
