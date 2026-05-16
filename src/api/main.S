@@ -432,26 +432,17 @@ corpus_score_bucket:
     cmp r9d, r10d
     jae corpus_score_not_found
     lea r11, [rip + corpus_ids]
+    lea rdx, [rip + corpus_scores]
 corpus_search_loop:
-    mov ecx, r9d
-    add ecx, r10d
-    shr ecx, 1
-    mov eax, dword ptr [r11 + rcx * 4]
+    mov eax, dword ptr [r11 + r9 * 4]
     cmp r8d, eax
     je corpus_score_found
-    jb corpus_search_left
-    lea r9d, [ecx + 1]
-    cmp r9d, r10d
-    jb corpus_search_loop
-    jmp corpus_score_not_found
-corpus_search_left:
-    mov r10d, ecx
+    inc r9d
     cmp r9d, r10d
     jb corpus_search_loop
     jmp corpus_score_not_found
 corpus_score_found:
-    lea rdx, [rip + corpus_scores]
-    movzx eax, byte ptr [rdx + rcx]
+    movzx eax, byte ptr [rdx + r9]
     ret
 corpus_score_not_found:
     mov eax, -1
