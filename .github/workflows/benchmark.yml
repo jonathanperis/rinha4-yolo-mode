@@ -1,0 +1,71 @@
+name: Official-like Benchmark
+
+on:
+  workflow_dispatch:
+    inputs:
+      official_ref:
+        description: Rinha official repo ref
+        required: true
+        default: main
+      k6_image:
+        description: k6 Docker image
+        required: true
+        default: grafana/k6:latest
+      webapi_image:
+        description: Optional prebuilt image; empty means build from checkout
+        required: false
+        default: ""
+      benchmark_repetitions:
+        description: Number of k6 repetitions
+        required: true
+        default: "1"
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  official-like-benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install host utilities
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends curl git jq
+
+      - name: Log in to GHCR
+        if: inputs.webapi_image != ''
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run official-like benchmark
+        env:
+          OFFICIAL_REF: ${{ inputs.official_ref }}
+          K6_IMAGE: ${{ inputs.k6_image }}
+          WEBAPI_IMAGE: ${{ inputs.webapi_image }}
+          BENCHMARK_PULL_IMAGE: ${{ inputs.webapi_image != '' && 'true' || 'false' }}
+          BENCHMARK_NO_BUILD: ${{ inputs.webapi_image != '' && 'true' || 'false' }}
+          BENCHMARK_REPETITIONS: ${{ inputs.benchmark_repetitions }}
+          RESULTS_DIR: benchmark-results
+        run: bash scripts/ci-official-benchmark.sh
+
+      - name: Upload benchmark artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: rinha-yolo-benchmark-${{ github.run_number }}
+          path: |
+            benchmark-results/results.json
+            benchmark-results/k6-report.html
+            benchmark-results/results-repetition-*.json
+            benchmark-results/k6-report-repetition-*.html
+            benchmark-results/docker-compose.log
+            benchmark-results/docker-state-*.txt
+          if-no-files-found: ignore

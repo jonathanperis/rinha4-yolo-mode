@@ -14,18 +14,18 @@ k6 / judge
     v
 asm lb :9999
     |  SCM_RIGHTS fd handoff, round-robin only
-    +-- unix:/run/rinha/api1.sock -> asm api -> inherited client fd
-    +-- unix:/run/rinha/api2.sock -> asm api -> inherited client fd
+    +-- unix:/tmp/rinha/api1.sock -> asm api -> inherited client fd
+    +-- unix:/tmp/rinha/api2.sock -> asm api -> inherited client fd
 ```
 
 ## Current status
 
-Bootstrap scaffold. The repository currently builds:
+First fd-passing assembly stack. The repository currently builds:
 
-- `build/api`: minimal pure-assembly direct TCP smoke server for `/ready` and fixed `/fraud-score` response.
-- `build/lb`: pure-assembly placeholder while the fd-passing LB is ported.
+- `build/api`: pure-assembly API. With no arguments it runs a direct TCP smoke server on `:9999`; with a Unix-socket path argument it accepts client FDs via `SCM_RIGHTS` and responds on the inherited sockets.
+- `build/lb`: pure-assembly TCP listener on `:9999` that round-robins accepted client FDs to `/tmp/rinha/api1.sock` and `/tmp/rinha/api2.sock`.
 
-This is **not submission-ready yet**. See `docs/plans/2026-05-16-yolo-assembly-participation.md` for the implementation plan.
+The current fraud implementation is still a correctness placeholder returning `fraud_score: 0.0`, so this is **not submission-ready yet**. CI is intentionally for our repo maturity loop only; official candidate promotion means an explicit submission to the Rinha repository after the assembly version is mature.
 
 ## Local verification
 
@@ -37,8 +37,18 @@ Expected:
 
 ```text
 asm api smoke passed
+asm lb fdpass smoke passed
+asm full fdpass stack smoke passed
 purity check passed
 ```
+
+## CI
+
+GitHub Actions now mirrors the early Rinha4 repo loop:
+
+- `CI`: assembles both binaries, runs direct API, fd-passing LB, full-stack smoke tests, purity check, and validates `docker-compose.yml`.
+- `Build and publish image`: repeats tests, builds `linux/amd64`, and publishes immutable `ci-<sha>` plus default tags to GHCR on `main`.
+- `Official-like Benchmark`: manual-only workflow for maturity tracking against the official k6 harness. It uploads artifacts but does not submit or promote this repo as an official Rinha candidate.
 
 ## Purity rule
 
