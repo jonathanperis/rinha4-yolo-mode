@@ -308,6 +308,15 @@ score_card_present:
 score_avg_ratio:
     call avg_amount_value
     test eax, eax
+    jz score_merchant_avg
+    imul eax, eax, 5
+    cmp r10d, eax
+    jb score_merchant_avg
+    inc r11d
+
+score_merchant_avg:
+    call merchant_avg_amount_value
+    test eax, eax
     jz score_km_home
     imul eax, eax, 5
     cmp r10d, eax
@@ -428,6 +437,39 @@ next_avg_amount_byte:
     xor rax, rax
     ret
 found_avg_amount_key:
+    add r8, 12
+    jmp parse_number_after_key
+
+merchant_avg_amount_value:
+    lea r8, [rip + request_buffer]
+    mov ecx, BUF_SIZE - 8
+find_merchant_avg_mcc_key:
+    cmp dword ptr [r8], 0x63636d22      # "mcc
+    jne next_merchant_avg_mcc_byte
+    cmp byte ptr [r8 + 4], '"'
+    je found_merchant_avg_mcc_key
+next_merchant_avg_mcc_byte:
+    inc r8
+    dec ecx
+    jnz find_merchant_avg_mcc_key
+    xor rax, rax
+    ret
+found_merchant_avg_mcc_key:
+    mov ecx, 256
+find_merchant_avg_amount_key:
+    mov rax, qword ptr [r8]
+    movabs r9, 0x6f6d615f67766122
+    cmp rax, r9                         # "avg_amo
+    jne next_merchant_avg_amount_byte
+    cmp dword ptr [r8 + 8], 0x22746e75  # unt"
+    je found_merchant_avg_amount_key
+next_merchant_avg_amount_byte:
+    inc r8
+    dec ecx
+    jnz find_merchant_avg_amount_key
+    xor rax, rax
+    ret
+found_merchant_avg_amount_key:
     add r8, 12
     jmp parse_number_after_key
 
@@ -560,7 +602,16 @@ advance_mcc_ws:
     inc r8
     jmp skip_mcc_ws
 check_mcc_risk:
-    cmp dword ptr [r8], 0x35393937      # 7995
+    mov eax, dword ptr [r8]
+    cmp eax, 0x35393937                 # 7995
+    je parsed_mcc_risk
+    cmp eax, 0x31303837                 # 7801
+    je parsed_mcc_risk
+    cmp eax, 0x32303837                 # 7802
+    je parsed_mcc_risk
+    cmp eax, 0x34343935                 # 5944
+    je parsed_mcc_risk
+    cmp eax, 0x39393935                 # 5999
     je parsed_mcc_risk
     xor rax, rax
     ret
