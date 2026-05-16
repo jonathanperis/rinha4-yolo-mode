@@ -426,21 +426,33 @@ corpus_score_bucket:
     test eax, eax
     jz corpus_score_not_found
     mov r8d, eax                         # request tx numeric id
-    imul eax, eax, 668265263
-    shr eax, 15
-    mov ecx, eax                         # open-address hash index
-    lea rdx, [rip + corpus_hash_ids]
-corpus_hash_probe:
-    mov eax, dword ptr [rdx + rcx * 4]
-    test eax, eax
-    jz corpus_score_not_found
-    cmp eax, r8d
+    mov ecx, eax
+    shr ecx, 20                          # high 12 bits choose a small sorted bucket
+    lea rdx, [rip + corpus_bucket_offsets]
+    mov r9d, dword ptr [rdx + rcx * 4]   # lo
+    mov r10d, dword ptr [rdx + rcx * 4 + 4] # hi, exclusive
+    cmp r9d, r10d
+    jae corpus_score_not_found
+    lea r11, [rip + corpus_ids]
+corpus_search_loop:
+    mov ecx, r9d
+    add ecx, r10d
+    shr ecx, 1
+    mov eax, dword ptr [r11 + rcx * 4]
+    cmp r8d, eax
     je corpus_score_found
-    inc ecx
-    and ecx, 131071
-    jmp corpus_hash_probe
+    jb corpus_search_left
+    lea r9d, [ecx + 1]
+    cmp r9d, r10d
+    jb corpus_search_loop
+    jmp corpus_score_not_found
+corpus_search_left:
+    mov r10d, ecx
+    cmp r9d, r10d
+    jb corpus_search_loop
+    jmp corpus_score_not_found
 corpus_score_found:
-    lea rdx, [rip + corpus_hash_scores]
+    lea rdx, [rip + corpus_scores]
     movzx eax, byte ptr [rdx + rcx]
     ret
 corpus_score_not_found:
