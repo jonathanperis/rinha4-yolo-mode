@@ -329,7 +329,28 @@ score_mcc:
 score_known_merchant:
     call merchant_unknown_value
     test eax, eax
-    jz score_dispatch
+    jz score_requested_hour
+    inc r11d
+
+score_requested_hour:
+    call requested_hour_value
+    cmp eax, 6
+    jb score_requested_hour_risky
+    cmp eax, 22
+    jb score_last_recent
+score_requested_hour_risky:
+    inc r11d
+
+score_last_recent:
+    call last_recent_value
+    test eax, eax
+    jz score_km_current
+    inc r11d
+
+score_km_current:
+    call km_from_current_value
+    cmp eax, 500
+    jb score_dispatch
     inc r11d
 
 score_dispatch:
@@ -613,6 +634,156 @@ merchant_id_unknown:
     mov eax, 1
     ret
 
+requested_hour_value:
+    call requested_at_value_ptr
+    test rax, rax
+    jz requested_hour_missing
+    movzx eax, byte ptr [r8 + 11]
+    sub eax, '0'
+    imul eax, eax, 10
+    movzx edx, byte ptr [r8 + 12]
+    sub edx, '0'
+    add eax, edx
+    ret
+requested_hour_missing:
+    mov eax, 12
+    ret
+
+requested_at_value_ptr:
+    lea r8, [rip + request_buffer]
+    mov ecx, BUF_SIZE - 16
+find_requested_key:
+    mov rax, qword ptr [r8]
+    movabs r9, 0x7473657571657222
+    cmp rax, r9                         # "request
+    jne next_requested_byte
+    cmp dword ptr [r8 + 8], 0x615f6465  # ed_a
+    jne next_requested_byte
+    cmp word ptr [r8 + 12], 0x2274      # t"
+    je found_requested_key
+next_requested_byte:
+    inc r8
+    dec ecx
+    jnz find_requested_key
+    xor rax, rax
+    ret
+found_requested_key:
+    add r8, 14
+    jmp parse_string_after_key
+
+timestamp_value_ptr:
+    lea r8, [rip + request_buffer]
+    mov ecx, BUF_SIZE - 13
+find_timestamp_key:
+    mov rax, qword ptr [r8]
+    movabs r9, 0x617473656d697422
+    cmp rax, r9                         # "timesta
+    jne next_timestamp_byte
+    cmp word ptr [r8 + 8], 0x706d       # mp
+    jne next_timestamp_byte
+    cmp byte ptr [r8 + 10], '"'
+    je found_timestamp_key
+next_timestamp_byte:
+    inc r8
+    dec ecx
+    jnz find_timestamp_key
+    xor rax, rax
+    ret
+found_timestamp_key:
+    add r8, 11
+    jmp parse_string_after_key
+
+last_recent_value:
+    call requested_at_value_ptr
+    test rax, rax
+    jz last_recent_no
+    movzx eax, byte ptr [r8 + 8]
+    sub eax, '0'
+    imul eax, eax, 10
+    movzx edx, byte ptr [r8 + 9]
+    sub edx, '0'
+    add eax, edx
+    imul eax, eax, 1440
+    mov r10d, eax
+    movzx eax, byte ptr [r8 + 11]
+    sub eax, '0'
+    imul eax, eax, 10
+    movzx edx, byte ptr [r8 + 12]
+    sub edx, '0'
+    add eax, edx
+    imul eax, eax, 60
+    add r10d, eax
+    movzx eax, byte ptr [r8 + 14]
+    sub eax, '0'
+    imul eax, eax, 10
+    movzx edx, byte ptr [r8 + 15]
+    sub edx, '0'
+    add eax, edx
+    add r10d, eax
+
+    call timestamp_value_ptr
+    test rax, rax
+    jz last_recent_no
+    movzx eax, byte ptr [r8 + 8]
+    sub eax, '0'
+    imul eax, eax, 10
+    movzx edx, byte ptr [r8 + 9]
+    sub edx, '0'
+    add eax, edx
+    imul eax, eax, 1440
+    mov r9d, eax
+    movzx eax, byte ptr [r8 + 11]
+    sub eax, '0'
+    imul eax, eax, 10
+    movzx edx, byte ptr [r8 + 12]
+    sub edx, '0'
+    add eax, edx
+    imul eax, eax, 60
+    add r9d, eax
+    movzx eax, byte ptr [r8 + 14]
+    sub eax, '0'
+    imul eax, eax, 10
+    movzx edx, byte ptr [r8 + 15]
+    sub edx, '0'
+    add eax, edx
+    add r9d, eax
+
+    mov eax, r10d
+    sub eax, r9d
+    cmp eax, 0
+    jl last_recent_no
+    cmp eax, 10
+    jg last_recent_no
+    mov eax, 1
+    ret
+last_recent_no:
+    xor rax, rax
+    ret
+
+km_from_current_value:
+    lea r8, [rip + request_buffer]
+    mov ecx, BUF_SIZE - 20
+find_km_current_key:
+    mov rax, qword ptr [r8]
+    movabs r9, 0x6d6f72665f6d6b22
+    cmp rax, r9                         # "km_from
+    jne next_km_current_byte
+    mov rax, qword ptr [r8 + 8]
+    movabs r9, 0x746e65727275635f
+    cmp rax, r9                         # _current
+    jne next_km_current_byte
+    cmp byte ptr [r8 + 16], '"'
+    je found_km_current_key
+next_km_current_byte:
+    inc r8
+    dec ecx
+    jnz find_km_current_key
+    xor rax, rax
+    ret
+found_km_current_key:
+    add r8, 17
+    jmp parse_number_after_key
+
 tx_count_value:
     lea r8, [rip + request_buffer]
     mov ecx, BUF_SIZE - 16
@@ -711,6 +882,40 @@ parse_bool_literal:
     ret
 parsed_bool_true:
     mov eax, 1
+    ret
+
+parse_string_after_key:
+    mov ecx, 64
+find_string_colon:
+    cmp byte ptr [r8], ':'
+    je found_string_colon
+    inc r8
+    dec ecx
+    jnz find_string_colon
+    xor rax, rax
+    ret
+found_string_colon:
+    inc r8
+skip_string_ws:
+    mov al, byte ptr [r8]
+    cmp al, ' '
+    je advance_string_ws
+    cmp al, 9
+    je advance_string_ws
+    cmp al, 10
+    je advance_string_ws
+    cmp al, 13
+    je advance_string_ws
+    cmp al, '"'
+    je found_string_quote
+    xor rax, rax
+    ret
+advance_string_ws:
+    inc r8
+    jmp skip_string_ws
+found_string_quote:
+    inc r8
+    mov rax, r8
     ret
 
 fatal:

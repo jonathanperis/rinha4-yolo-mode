@@ -19,6 +19,7 @@ for path in paths:
         pass
 
 seen = []
+responses = []
 stop = threading.Event()
 servers = []
 threads = []
@@ -97,6 +98,7 @@ try:
                 s.sendall(b"GET /ready HTTP/1.1\r\nHost: localhost\r\n\r\n")
                 data = s.recv(1024)
                 assert b"HTTP/1.1 200 OK" in data, data
+                responses.append(data.rsplit(b"\r\n\r\n", 1)[-1].decode())
                 break
         except Exception as exc:
             last_error = exc
@@ -109,11 +111,13 @@ try:
             s.sendall(b"GET /ready HTTP/1.1\r\nHost: localhost\r\n\r\n")
             data = s.recv(1024)
             assert data.endswith((b"api1", b"api2")), data
+            responses.append(data.rsplit(b"\r\n\r\n", 1)[-1].decode())
 
     deadline = time.time() + 2
     while time.time() < deadline and len(seen) < 4:
         time.sleep(0.01)
-    assert seen[:4] == ["api2", "api1", "api2", "api1"], seen
+    assert responses[:4] == ["api2", "api1", "api2", "api1"], responses
+    assert sorted(seen[:4]) == ["api1", "api1", "api2", "api2"], seen
 finally:
     proc.terminate()
     try:

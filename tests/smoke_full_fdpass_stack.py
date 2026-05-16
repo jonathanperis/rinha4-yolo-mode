@@ -70,6 +70,14 @@ try:
     assert b"HTTP/1.1 200 OK" in data, data
     assert b'{"approved":false,"fraud_score":0.6}' in data, data
 
+    data = post(b'{"id":"time-risk","transaction":{"amount":100,"installments":1,"requested_at":"2026-03-11T02:23:35Z"},"customer":{"tx_count_24h":0},"terminal":{"is_online":false,"card_present":true}}')
+    assert b"HTTP/1.1 200 OK" in data, data
+    assert b'{"approved":true,"fraud_score":0.2}' in data, data
+
+    data = post(b'{"id":"last-transaction-risk","transaction":{"amount":100,"installments":1,"requested_at":"2026-03-11T20:23:35Z"},"customer":{"tx_count_24h":0},"terminal":{"is_online":false,"card_present":true},"last_transaction":{"timestamp":"2026-03-11T20:18:35Z","km_from_current":700}}')
+    assert b"HTTP/1.1 200 OK" in data, data
+    assert b'{"approved":true,"fraud_score":0.4}' in data, data
+
     data = post(b'{"id":"terminal-risk","transaction":{"amount":100,"installments":1},"customer":{"tx_count_24h":20},"terminal":{"is_online":true,"card_present":false}}')
     assert b"HTTP/1.1 200 OK" in data, data
     assert b'{"approved":false,"fraud_score":0.8}' in data, data
