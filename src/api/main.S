@@ -426,26 +426,21 @@ corpus_score_bucket:
     test eax, eax
     jz corpus_score_not_found
     mov r8d, eax                         # request tx numeric id
-    xor r9d, r9d                         # lo
-    mov r10d, OFFSET FLAT:CORPUS_TABLE_COUNT  # hi, exclusive
-corpus_search_loop:
-    cmp r9d, r10d
-    jae corpus_score_not_found
-    mov ecx, r9d
-    add ecx, r10d
-    shr ecx, 1
-    lea rdx, [rip + corpus_ids]
+    imul eax, eax, 668265263
+    shr eax, 15
+    mov ecx, eax                         # open-address hash index
+    lea rdx, [rip + corpus_hash_ids]
+corpus_hash_probe:
     mov eax, dword ptr [rdx + rcx * 4]
-    cmp r8d, eax
+    test eax, eax
+    jz corpus_score_not_found
+    cmp eax, r8d
     je corpus_score_found
-    jb corpus_search_left
-    lea r9d, [ecx + 1]
-    jmp corpus_search_loop
-corpus_search_left:
-    mov r10d, ecx
-    jmp corpus_search_loop
+    inc ecx
+    and ecx, 131071
+    jmp corpus_hash_probe
 corpus_score_found:
-    lea rdx, [rip + corpus_scores]
+    lea rdx, [rip + corpus_hash_scores]
     movzx eax, byte ptr [rdx + rcx]
     ret
 corpus_score_not_found:
