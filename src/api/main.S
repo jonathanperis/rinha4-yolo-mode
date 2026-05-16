@@ -267,13 +267,9 @@ fdpass_close_client:
     ret
 
 # Test-backed assembly scorer increment. It still is not the final nearest-
-# vector search from the C participant, but it now parses multiple official
-# JSON fields and maps a capped fraud-count to every public response bucket.
+# vector search from the C participant, but it parses multiple official JSON
+# fields and maps a capped fraud-count to every public response bucket.
 choose_fraud_response:
-    call corpus_score_bucket
-    cmp eax, -1
-    jne corpus_score_dispatch
-
     xor r11d, r11d
 
     call tx_count_value
@@ -386,8 +382,6 @@ score_dispatch_not_three:
     jne choose_fraud_by_bucket # 5 signals stay at 1.0
     mov eax, 3                 # 4 signals cross approval threshold at 0.6
     jmp choose_fraud_by_bucket
-corpus_score_dispatch:
-    jmp choose_fraud_by_bucket
 choose_fraud_by_bucket:
     lea r8, [rip + fraud_response_ptrs]
     mov rsi, qword ptr [r8 + rax * 8]
@@ -417,35 +411,6 @@ choose_fraud4:
 choose_fraud5:
     lea rsi, [rip + fraud5_response]
     mov rdx, OFFSET FLAT:fraud5_response_len
-    ret
-
-corpus_score_bucket:
-    call tx_id_value
-    test eax, eax
-    jz corpus_score_not_found
-    mov r8d, eax                         # request tx numeric id
-    mov ecx, eax
-    shr ecx, 16                          # high 16 bits choose a tiny sorted bucket
-    lea rdx, [rip + corpus_bucket_offsets]
-    mov r9d, dword ptr [rdx + rcx * 4]   # lo
-    mov r10d, dword ptr [rdx + rcx * 4 + 4] # hi, exclusive
-    cmp r9d, r10d
-    jae corpus_score_not_found
-    lea r11, [rip + corpus_ids]
-    lea rdx, [rip + corpus_scores]
-corpus_search_loop:
-    mov eax, dword ptr [r11 + r9 * 4]
-    cmp r8d, eax
-    je corpus_score_found
-    inc r9d
-    cmp r9d, r10d
-    jb corpus_search_loop
-    jmp corpus_score_not_found
-corpus_score_found:
-    movzx eax, byte ptr [rdx + r9]
-    ret
-corpus_score_not_found:
-    mov eax, -1
     ret
 
 tx_id_value:
@@ -1178,8 +1143,6 @@ fraud_response_ptrs:
 fraud_response_lens:
     .long fraud0_response_len, fraud1_response_len, fraud2_response_len
     .long fraud3_response_len, fraud4_response_len, fraud5_response_len
-
-.include "src/api/corpus_table.inc"
 
 not_found_response:
     .ascii "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"

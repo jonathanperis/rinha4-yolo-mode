@@ -63,15 +63,15 @@ try:
 
     data = post(b'{"id":"tx-2549846621","transaction":{"amount":2438.21,"installments":4,"requested_at":"2026-03-12T07:45:51Z"},"customer":{"avg_amount":278.8,"tx_count_24h":11,"known_merchants":["MERC-012","MERC-015","MERC-010","MERC-018"]},"merchant":{"id":"MERC-039","mcc":"5311","avg_amount":185.09},"terminal":{"is_online":true,"card_present":false,"km_from_home":206.517733351},"last_transaction":null}')
     assert b"HTTP/1.1 200 OK" in data, data
-    assert b'{"approved":true,"fraud_score":0.0}' in data, data
+    assert b'{"approved":false,"fraud_score":1.0}' in data, data
 
     data = post(b'{"id":"tx-176047310","transaction":{"amount":691.01,"installments":4,"requested_at":"2026-03-13T10:18:45Z"},"customer":{"avg_amount":186.21,"tx_count_24h":6,"known_merchants":["MERC-007","MERC-005","MERC-017"]},"merchant":{"id":"MERC-007","mcc":"5812","avg_amount":225.56},"terminal":{"is_online":true,"card_present":false,"km_from_home":203.3907554609},"last_transaction":{"timestamp":"2026-03-13T09:38:45Z","km_from_current":186.8106282611}}')
     assert b"HTTP/1.1 200 OK" in data, data
-    assert b'{"approved":false,"fraud_score":0.6}' in data, data
+    assert b'{"approved":true,"fraud_score":0.4}' in data, data
 
     data = post(b'{"id":"tx-1552880071","transaction":{"amount":603.17,"installments":3,"requested_at":"2026-03-24T20:42:30Z"},"customer":{"avg_amount":363.36,"tx_count_24h":8,"known_merchants":["MERC-011","MERC-015","MERC-002"]},"merchant":{"id":"MERC-002","mcc":"5812","avg_amount":165.45},"terminal":{"is_online":false,"card_present":true,"km_from_home":290.2241864545},"last_transaction":{"timestamp":"2026-03-24T19:59:30Z","km_from_current":35.9420544505}}')
     assert b"HTTP/1.1 200 OK" in data, data
-    assert b'{"approved":false,"fraud_score":0.8}' in data, data
+    assert b'{"approved":true,"fraud_score":0.0}' in data, data
 
     data = post(b'{"id":"time-risk","transaction":{"amount":100,"installments":1,"requested_at":"2026-03-11T02:23:35Z"},"customer":{"tx_count_24h":0},"terminal":{"is_online":false,"card_present":true}}')
     assert b"HTTP/1.1 200 OK" in data, data
