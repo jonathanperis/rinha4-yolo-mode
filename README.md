@@ -25,7 +25,7 @@ First fd-passing assembly stack. The repository currently builds:
 - `build/api`: pure-assembly API. With no arguments it runs a direct TCP smoke server on `:9999`; with a Unix-socket path argument it accepts client FDs via `SCM_RIGHTS` and responds on the inherited sockets.
 - `build/lb`: pure-assembly TCP listener on `:9999` that round-robins accepted client FDs to `/tmp/rinha/api1.sock` and `/tmp/rinha/api2.sock`.
 
-The current fraud implementation is still a correctness placeholder returning `fraud_score: 0.0`, so this is **not submission-ready yet**. CI is intentionally for our repo maturity loop only; official candidate promotion means an explicit submission to the Rinha repository after the assembly version is mature.
+The current fraud implementation is a first heuristic increment, not the final scorer: it extracts `tx_count_24h` and maps `0-9 => 0.0`, `10-19 => 0.6`, `20+ => 1.0`. This proves the assembly parser/scoring/response path but is still **not submission-ready yet**. CI is intentionally for our repo maturity loop only; official candidate promotion means an explicit submission to the Rinha repository after the assembly version is mature.
 
 ## Local verification
 

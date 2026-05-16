@@ -44,14 +44,23 @@ try:
     else:
         raise SystemExit(f"full stack /ready failed: {last_error}")
 
-    for _ in range(4):
+    def post(body: bytes) -> bytes:
         with socket.create_connection(("127.0.0.1", 9999), timeout=1) as s:
-            body = b'{"id":"tx-smoke"}'
             req = b"POST /fraud-score HTTP/1.1\r\nHost: localhost\r\nContent-Length: " + str(len(body)).encode() + b"\r\n\r\n" + body
             s.sendall(req)
-            data = s.recv(2048)
-            assert b"HTTP/1.1 200 OK" in data, data
-            assert b'{"approved":true,"fraud_score":0.0}' in data, data
+            return s.recv(2048)
+
+    data = post(b'{"id":"tx-smoke","tx_count_24h":0}')
+    assert b"HTTP/1.1 200 OK" in data, data
+    assert b'{"approved":true,"fraud_score":0.0}' in data, data
+
+    data = post(b'{"id":"tx-medium","tx_count_24h":10}')
+    assert b"HTTP/1.1 200 OK" in data, data
+    assert b'{"approved":false,"fraud_score":0.6}' in data, data
+
+    data = post(b'{"id":"tx-risk","tx_count_24h":20}')
+    assert b"HTTP/1.1 200 OK" in data, data
+    assert b'{"approved":false,"fraud_score":1.0}' in data, data
 finally:
     for proc in reversed(procs):
         proc.terminate()

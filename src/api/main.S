@@ -101,8 +101,7 @@ write_ready:
     jmp write_response
 
 write_fraud_default:
-    lea rsi, [rip + fraud0_response]
-    mov rdx, OFFSET FLAT:fraud0_response_len
+    call choose_fraud_response
     jmp write_response
 
 write_not_found:
@@ -237,8 +236,7 @@ fdpass_write_ready:
     jmp fdpass_write_response
 
 fdpass_write_fraud_default:
-    lea rsi, [rip + fraud0_response]
-    mov rdx, OFFSET FLAT:fraud0_response_len
+    call choose_fraud_response
     jmp fdpass_write_response
 
 fdpass_write_not_found:
@@ -256,6 +254,92 @@ fdpass_close_client:
     syscall
     ret
 
+# Minimal first assembly scorer: extract `"tx_count_24h"` and map high
+# transaction velocity to the same response buckets used by the C API:
+# 0-9 => fraud=0, 10-19 => fraud=3 (0.6), 20+ => fraud=5 (1.0).
+# This is intentionally a small, test-backed increment toward the full C
+# vectorizer/search path.
+choose_fraud_response:
+    call tx_count_value
+    cmp eax, 20
+    jae choose_fraud5
+    cmp eax, 10
+    jae choose_fraud3
+    lea rsi, [rip + fraud0_response]
+    mov rdx, OFFSET FLAT:fraud0_response_len
+    ret
+choose_fraud3:
+    lea rsi, [rip + fraud3_response]
+    mov rdx, OFFSET FLAT:fraud3_response_len
+    ret
+choose_fraud5:
+    lea rsi, [rip + fraud5_response]
+    mov rdx, OFFSET FLAT:fraud5_response_len
+    ret
+
+tx_count_value:
+    lea r8, [rip + request_buffer]
+    mov ecx, BUF_SIZE - 16
+find_tx_key:
+    mov rax, qword ptr [r8]
+    movabs r9, 0x6e756f635f787422
+    cmp rax, r9     # "tx_coun
+    jne next_tx_byte
+    cmp dword ptr [r8 + 8], 0x34325f74         # t_24
+    jne next_tx_byte
+    cmp word ptr [r8 + 12], 0x2268             # h"
+    je found_tx_key
+next_tx_byte:
+    inc r8
+    dec ecx
+    jnz find_tx_key
+    xor rax, rax
+    ret
+
+found_tx_key:
+    add r8, 14
+    mov ecx, 64
+find_tx_colon:
+    cmp byte ptr [r8], ':'
+    je found_tx_colon
+    inc r8
+    dec ecx
+    jnz find_tx_colon
+    xor rax, rax
+    ret
+found_tx_colon:
+    inc r8
+skip_tx_ws:
+    mov al, byte ptr [r8]
+    cmp al, ' '
+    je advance_tx_ws
+    cmp al, 9
+    je advance_tx_ws
+    cmp al, 10
+    je advance_tx_ws
+    cmp al, 13
+    je advance_tx_ws
+    jmp parse_tx_digits
+advance_tx_ws:
+    inc r8
+    jmp skip_tx_ws
+parse_tx_digits:
+    xor ebx, ebx
+parse_tx_loop:
+    movzx eax, byte ptr [r8]
+    cmp al, '0'
+    jb parsed_tx_count
+    cmp al, '9'
+    ja parsed_tx_count
+    imul ebx, ebx, 10
+    sub eax, '0'
+    add ebx, eax
+    inc r8
+    jmp parse_tx_loop
+parsed_tx_count:
+    mov eax, ebx
+    ret
+
 fatal:
     mov rax, SYS_EXIT
     mov rdi, 1
@@ -269,6 +353,14 @@ ready_response:
 fraud0_response:
     .ascii "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 36\r\nConnection: close\r\n\r\n{\"approved\":true,\"fraud_score\":0.0}"
 .equ fraud0_response_len, . - fraud0_response
+
+fraud3_response:
+    .ascii "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 37\r\nConnection: close\r\n\r\n{\"approved\":false,\"fraud_score\":0.6}"
+.equ fraud3_response_len, . - fraud3_response
+
+fraud5_response:
+    .ascii "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 37\r\nConnection: close\r\n\r\n{\"approved\":false,\"fraud_score\":1.0}"
+.equ fraud5_response_len, . - fraud5_response
 
 not_found_response:
     .ascii "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
