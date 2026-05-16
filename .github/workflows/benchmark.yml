@@ -66,6 +66,7 @@ jobs:
             benchmark-results/k6-report.html
             benchmark-results/results-repetition-*.json
             benchmark-results/k6-report-repetition-*.html
+            benchmark-results/repetition-summary.json
             benchmark-results/docker-compose.log
             benchmark-results/docker-state-*.txt
           if-no-files-found: ignore

@@ -14,6 +14,11 @@ cd "$ROOT_DIR"
 mkdir -p "$RESULTS_DIR"
 rm -rf "$RESULTS_DIR/official"
 
+if ! [[ "$BENCHMARK_REPETITIONS" =~ ^[0-9]+$ ]] || [[ "$BENCHMARK_REPETITIONS" -lt 1 ]]; then
+    echo "BENCHMARK_REPETITIONS must be a positive integer" >&2
+    exit 1
+fi
+
 compose_args=(--compatibility -f docker-compose.yml)
 
 capture_docker_state() {
@@ -67,7 +72,9 @@ for attempt in {1..20}; do
 done
 
 repeat_files=()
+chmod -R a+rwX "$RESULTS_DIR/official"
 for repetition in $(seq 1 "$BENCHMARK_REPETITIONS"); do
+    echo "==> k6 repetition $repetition/$BENCHMARK_REPETITIONS"
     rm -f "$RESULTS_DIR/official/test/results.json" "$RESULTS_DIR/official/test/k6-report.html"
     docker run --rm \
         --network host \
@@ -88,8 +95,39 @@ for repetition in $(seq 1 "$BENCHMARK_REPETITIONS"); do
     fi
 done
 
-cp "${repeat_files[0]}" "$RESULTS_DIR/results.json"
-if [[ -f "$RESULTS_DIR/k6-report-repetition-1.html" ]]; then
-    cp "$RESULTS_DIR/k6-report-repetition-1.html" "$RESULTS_DIR/k6-report.html"
+if [[ "$BENCHMARK_REPETITIONS" -eq 1 ]]; then
+    cp "${repeat_files[0]}" "$RESULTS_DIR/results.json"
+    if [[ -f "$RESULTS_DIR/k6-report-repetition-1.html" ]]; then
+        cp "$RESULTS_DIR/k6-report-repetition-1.html" "$RESULTS_DIR/k6-report.html"
+    fi
+else
+    selected_repetition="$(jq -s '
+        def median_index: ((length - 1) / 2 | floor);
+        [to_entries[] | {
+            repetition: (.key + 1),
+            score: .value.scoring.final_score,
+            p99_ms: (.value.p99 | sub("ms"; "") | tonumber)
+        }]
+        | sort_by(.score)
+        | (.[median_index].score) as $median_score
+        | map(select(.score == $median_score))
+        | sort_by(.p99_ms)
+        | .[median_index].repetition
+    ' "${repeat_files[@]}")"
+    cp "$RESULTS_DIR/results-repetition-$selected_repetition.json" "$RESULTS_DIR/results.json"
+    if [[ -f "$RESULTS_DIR/k6-report-repetition-$selected_repetition.html" ]]; then
+        cp "$RESULTS_DIR/k6-report-repetition-$selected_repetition.html" "$RESULTS_DIR/k6-report.html"
+    fi
+
+    jq -s --argjson selected_repetition "$selected_repetition" '{
+        repetitions: length,
+        selected: "median_score_then_median_p99",
+        selected_repetition: $selected_repetition,
+        selected_p99_ms: (.[($selected_repetition - 1)].p99 | sub("ms"; "") | tonumber),
+        p99_ms: (map(.p99 | sub("ms"; "") | tonumber) | sort | {min: .[0], median: .[((length - 1) / 2 | floor)], max: .[-1]}),
+        final_score: (map(.scoring.final_score) | sort | {min: .[0], median: .[((length - 1) / 2 | floor)], max: .[-1]}),
+        failure_rate: map(.scoring.failure_rate)
+    }' "${repeat_files[@]}" > "$RESULTS_DIR/repetition-summary.json"
 fi
+
 jq . "$RESULTS_DIR/results.json"
