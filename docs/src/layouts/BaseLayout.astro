@@ -10,6 +10,8 @@ interface Props {
 
 const { title, description = 'Assembly benchmark proof dossier for rinha4-yolo-mode.' } = Astro.props;
 const canonical = new URL(Astro.url.pathname, 'https://jonathanperis.github.io').toString();
+const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
+const faviconHref = `${basePath}/favicon.ico`;
 ---
 <!doctype html>
 <html lang="en">
@@ -19,6 +21,7 @@ const canonical = new URL(Astro.url.pathname, 'https://jonathanperis.github.io')
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
+    <link rel="icon" href={faviconHref} sizes="any" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
