@@ -1,39 +1,37 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { base, docs, evidence } from '../../data/site';
+import { base, docs, localLinks, sourceLinks } from '../../data/site';
 ---
-<BaseLayout title="Docs | rinha4-yolo-mode" description="Documentation command center for the pure assembly Rinha4 YOLO-mode participant.">
+<BaseLayout title="DOCS | rinha4-yolo-mode" description="Documentation command center for the pure assembly Rinha4 YOLO-mode participant.">
   <section class="docs-hero">
-    <p class="eyebrow">Documentation command center</p>
-    <h1>Understand, verify, then prepare a submission.</h1>
-    <p class="lede">This docs page is intentionally not a README mirror. It is a routing surface for reviewers who need architecture, verification, or submission readiness without digging through every source file first.</p>
+    <p class="eyebrow">DOCUMENTATION COMMAND CENTER</p>
+    <h1>VERIFY THE LANE BEFORE THE CLAIM.</h1>
+    <p>Docs follow the same proof-dossier grammar as the C and .NET pages: source first, runtime trace second, submission caveats always visible.</p>
   </section>
 
   <section class="docs-index" aria-label="Documentation routes">
     {docs.map((doc, index) => (
       <a class="doc-route" href={`${base}docs/${doc.slug}/`}>
-        <span class="route-number">0{index + 1}</span>
+        <span>{String(index + 1).padStart(2, '0')}</span>
         <div>
           <p>{doc.intent}</p>
           <h2>{doc.title}</h2>
-          <span>{doc.summary}</span>
+          <em>{doc.summary}</em>
         </div>
       </a>
     ))}
   </section>
 
-  <section class="workbench-section docs-evidence">
-    <div class="section-heading">
-      <p class="eyebrow">Evidence before interpretation</p>
-      <h2>Read the source trail while reading the docs.</h2>
+  <section class="source-strip docs-strip" aria-label="Evidence map">
+    <div>
+      <h2>REFERENCE FAMILY</h2>
+      <p>The YOLO page now inherits the terminal proof grammar from the C and .NET Pages surfaces.</p>
+      <div class="mini-links">{sourceLinks.map((link) => <a href={link.href}>{link.label}</a>)}</div>
     </div>
-    <div class="evidence-table" role="table" aria-label="Evidence map">
-      {evidence.map((row) => (
-        <div class="evidence-line" role="row">
-          <strong role="cell">{row.source}</strong>
-          <span role="cell">{row.claim}</span>
-        </div>
-      ))}
+    <div>
+      <h2>LOCAL EVIDENCE</h2>
+      <p>Use these links to inspect CI, deploy, and source state before treating a claim as current.</p>
+      <div class="mini-links">{localLinks.map((link) => <a href={link.href}>{link.label}</a>)}</div>
     </div>
   </section>
 </BaseLayout>

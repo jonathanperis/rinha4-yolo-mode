@@ -1,94 +1,109 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { base, docs, evidence, facts } from '../data/site';
+import { abLanes, base, consoleLines, docs, heroTags, latestCiRun, latestPagesRun, localLinks, proofCards, repoUrl, sourceLinks, traceSteps } from '../data/site';
 ---
-<BaseLayout title="rinha4-yolo-mode | Assembly architecture workbench">
-  <section class="hero shell-grid">
+<BaseLayout title="rinha4-yolo-mode | YOLO SIGNAL UNDER LOAD">
+  <section class="hero" aria-label="YOLO SIGNAL UNDER LOAD.">
     <div class="hero-copy">
-      <p class="eyebrow">Rinha de Backend 2026 participant</p>
-      <h1>Pure assembly API, fd-passing runtime, source-backed proof.</h1>
-      <p class="lede control-copy">A public workbench for Jonathan Peris' YOLO-mode participant: assembly API workers behind the shared ASM load balancer, documented with commands, topology, and verification gates.</p>
-      <p class="lede proof-copy">Start with proof: local smoke tests, corpus replay expectations, compose validation, and CI are exposed before the page asks you to trust any performance claim.</p>
-      <p class="lede architecture-copy">Start with architecture: one shared ASM load balancer accepts TCP, then hands client descriptors to two assembly API workers over Unix sockets.</p>
-      <div class="cta-row">
-        <a class="button primary" href={`${base}docs/`}>Open review docs</a>
-        <a class="button" href="https://github.com/jonathanperis/rinha4-yolo-mode">Inspect source</a>
+      <p class="eyebrow">RINHA 2026 // YOLO MODE // PURE ASM API</p>
+      <h1>YOLO SIGNAL<br />UNDER LOAD.</h1>
+      <p class="hero-summary evidence-copy">A public proof dossier for the assembly fraud scorer. The page now follows the C and .NET family: lane-labeled evidence first, runtime path second, CI caveats always visible.</p>
+      <p class="hero-summary ledger-copy">Proof stays separated by lane: assembly runtime, corpus replay, GitHub Actions, Pages deployment, and reference-site lineage.</p>
+      <p class="hero-summary runtime-copy">TCP arrives at the shared ASM load balancer, client descriptors move over Unix sockets, and `_start` writes response bytes back.</p>
+      <div class="tag-strip" aria-label="Current evidence summary">
+        {heroTags.map((tag) => <span><strong>{tag.label}</strong> {tag.value}</span>)}
       </div>
-      <div class="variant-switcher" aria-label="A/B review variants">
-        <span>Review variant</span>
-        <a href={`${base}?ab=control`}>control</a>
-        <a href={`${base}?ab=proof`}>proof</a>
-        <a href={`${base}?ab=architecture`}>architecture</a>
+      <div class="action-row">
+        <a class="button danger" href={latestCiRun}>VERIFY LATEST RUN</a>
+        <a class="button" href={`${base}docs/architecture/`}>TRACE HOT PATH</a>
+        <a class="button" href={latestPagesRun}>PAGES DEPLOY</a>
       </div>
     </div>
-    <aside class="topology-card" aria-label="Runtime topology">
-      <div class="panel-heading">
-        <span>runtime topology</span>
-        <strong>fdpass stream</strong>
-      </div>
-      <div class="topology">
-        <div class="node judge">k6 / judge<br /><small>tcp :9999</small></div>
-        <div class="line" aria-hidden="true"></div>
-        <div class="node lb">shared asm lb<br /><small>SCM_RIGHTS handoff</small></div>
-        <div class="branch" aria-hidden="true"><span></span><span></span></div>
-        <div class="split">
-          <div class="node api">api1.sock<br /><small>/app/api</small></div>
-          <div class="node api">api2.sock<br /><small>/app/api</small></div>
-        </div>
-      </div>
+    <aside class="console" aria-label="Benchmark provenance console">
+      <div class="console-title">RINHA4 YOLO BENCHMARK CONSOLE</div>
+      {consoleLines.map(([key, value]) => <p><span>&gt; {key}</span> {value}</p>)}
+      <p class="cursor"><span>&gt;</span></p>
     </aside>
   </section>
 
-  <section class="status-rail" aria-label="Key facts">
-    {facts.map((fact) => (
-      <div>
-        <span>{fact.label}</span>
-        <strong>{fact.value}</strong>
-      </div>
-    ))}
-  </section>
-
-  <section class="workbench-section proof-panel">
-    <div class="section-heading">
-      <p class="eyebrow">Evidence ledger</p>
-      <h2>Claims stay attached to files, commands, or workflows.</h2>
-    </div>
-    <div class="ledger">
-      {evidence.map((row) => (
-        <article class="ledger-row">
-          <div>
-            <h3>{row.claim}</h3>
-            <p>{row.detail}</p>
-          </div>
-          <code>{row.source}</code>
+  <section class="proof-ledger" aria-labelledby="ledger-title">
+    <div class="section-kicker">PROOF LEDGER</div>
+    <h2 id="ledger-title">ASM RUNTIME, CORPUS REPLAY, CI DEPLOYMENT.</h2>
+    <p>Every number below is lane-labeled. GitHub Actions evidence, local replay targets, and official hardware are not collapsed into one decorative counter.</p>
+    <div class="ledger-grid">
+      {proofCards.map((card) => (
+        <article class="proof-card">
+          <span class="status-chip">{card.status}</span>
+          <p class="card-label">{card.label}</p>
+          <h3>{card.title}</h3>
+          <dl>
+            {card.stats.map(([label, value]) => <><dt>{label}</dt><dd>{value}</dd></>)}
+          </dl>
+          <p>{card.body}</p>
+          <a href={card.href}>{card.cta}</a>
         </article>
       ))}
     </div>
   </section>
 
-  <section class="workbench-section docs-preview">
-    <div class="section-heading">
-      <p class="eyebrow">Docs command center</p>
-      <h2>Three routes for three review modes.</h2>
+  <section class="source-strip" aria-label="Source provenance">
+    <div>
+      <h2>OFFICIAL / REFERENCE SOURCE</h2>
+      <p>The visual system is intentionally a variant of the C and .NET proof dossiers. Challenge facts remain separate from YOLO CI evidence.</p>
+      <div class="mini-links">{sourceLinks.map((link) => <a href={link.href}>{link.label}</a>)}</div>
     </div>
-    <div class="docs-lanes">
-      {docs.map((doc) => (
-        <a class="doc-lane" href={`${base}docs/${doc.slug}/`}>
-          <span>{doc.intent}</span>
-          <strong>{doc.title}</strong>
-          <p>{doc.summary}</p>
-        </a>
+    <div>
+      <h2>LOCAL YOLO EVIDENCE</h2>
+      <p><code>main</code> currently publishes a Pages artifact, CI smoke and purity checks, an amd64 build, and CodeQL evidence for the assembly candidate.</p>
+      <div class="mini-links">{localLinks.map((link) => <a href={link.href}>{link.label}</a>)}</div>
+    </div>
+  </section>
+
+  <section class="runtime-trace" aria-labelledby="trace-title">
+    <div class="section-kicker">RUNTIME TRACE</div>
+    <h2 id="trace-title">THE FAST PATH IS SHORT. THE CAVEAT IS VISIBLE.</h2>
+    <div class="trace-list">
+      {traceSteps.map(([num, title, code, text]) => (
+        <article>
+          <span>{num}</span>
+          <div>
+            <h3>{title}</h3>
+            <code>{code}</code>
+          </div>
+          <p>{text}</p>
+        </article>
       ))}
     </div>
   </section>
 
-  <section class="command-band">
-    <div>
-      <p class="eyebrow">Local verification</p>
-      <h2>Run the repo like a reviewer.</h2>
+  <section class="ab-surface" aria-labelledby="ab-title">
+    <div class="section-kicker">A/B TEST SURFACE</div>
+    <h2 id="ab-title">THREE LANES TO TEST YOLO WITHOUT LOSING THE REFERENCE.</h2>
+    <div class="ab-grid">
+      {abLanes.map((lane, index) => (
+        <article>
+          <span>{String.fromCharCode(65 + index)}</span>
+          <h3>{lane.title}</h3>
+          <p>{lane.body}</p>
+          <a href={lane.href}>REVIEW {lane.key.toUpperCase()} LANE</a>
+        </article>
+      ))}
     </div>
-    <pre><code>make clean test
-make corpus-replay
-docker compose config --quiet</code></pre>
+  </section>
+
+  <section class="ci-stream" aria-label="CI benchmark stream">
+    <h2>CI BENCHMARK STREAM</h2>
+    <p>Candidate metrics are local evidence from GitHub Actions. Official hardware and reference-site proof remain separate lanes.</p>
+    <div class="stream-grid">
+      <div><strong>MAIN</strong><span>CI LANE</span></div>
+      <div><strong>0</strong><span>SMOKE FAILURES</span></div>
+      <div><strong>54100</strong><span>CORPUS TARGET</span></div>
+      <div><strong>LIVE</strong><span>PAGES DEPLOY</span></div>
+    </div>
+    <div class="action-row centered">
+      <a class="button" href={latestCiRun}>VIEW REPORT RUN</a>
+      <a class="button" href={`${base}docs/verification/`}>OPEN VERIFICATION DOCS</a>
+      <a class="button dashed" href={repoUrl}>SOURCE // ASM API</a>
+    </div>
   </section>
 </BaseLayout>
