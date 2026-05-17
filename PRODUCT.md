@@ -4,7 +4,7 @@ _Last updated: 2026-05-17_
 
 ## Product identity
 
-`rinha4-yolo-mode` is Jonathan Peris' pure x86-64 assembly Rinha de Backend 2026 participant. The repository proves a specific runtime bet: keep the API implementation assembly-only, use a shared assembly load balancer for fd-passing, and make every performance claim traceable to code, compose limits, CI, or benchmark artifacts.
+`rinha4-yolo-mode` is Jonathan Peris' pure x86-64 assembly Rinha de Backend 2026 participant. The public Pages surface should read as the assembly sibling of the C and .NET proof dossiers, not as a separate portfolio microsite. It proves a specific runtime bet: assembly API workers, shared YOLO load balancer, fd-passing transport, and every claim tied to code, compose limits, CI, or replay artifacts.
 
 ## Register
 
@@ -15,6 +15,15 @@ brand
 1. **Rinha reviewers and competitors** checking whether the participant is legitimate, reproducible, and within contest constraints.
 2. **Systems engineers** curious about assembly-only HTTP handling, Linux syscalls, Unix sockets, and fd-passing under tight CPU and memory limits.
 3. **Future Jonathan and agents** who need a source-backed map of the architecture before tuning, benchmarking, or preparing a submission branch.
+
+## Reference sites
+
+This Pages surface is intentionally a variant of:
+
+- `https://jonathanperis.github.io/rinha4-back-end-c/`
+- `https://jonathanperis.github.io/rinha4-back-end-dotnet/`
+
+It should reuse the family grammar: CRT dark surface, monospace, proof ledger, lane labels, benchmark console, runtime trace, report CTAs, and evidence caveats. It must replace C and .NET specifics with assembly/YOLO specifics.
 
 ## Visitor state of mind
 
@@ -42,23 +51,19 @@ Visitors arrive skeptical. They need proof quickly: what is assembly, what is sh
 
 ## Brand voice
 
-- **Physical words:** bare-metal, audited, pressure-tested.
+- **Physical words:** phosphor, audited, register-level, pressure-tested.
 - **Tone:** concise, technical, explicit about maturity and caveats.
-- **Avoid:** generic "blazing fast" claims, neon cyber filler, hero-number theatrics, vague enterprise language.
-- **Prefer:** source-backed statements, command snippets, topology diagrams, exact service names, links to evidence.
+- **Avoid:** generic "blazing fast" claims, neon cyber filler, hero-number theatrics without provenance, vague enterprise language.
+- **Prefer:** lane labels, command snippets, topology traces, exact service names, links to evidence.
 
 ## Desired visitor experience
 
-The page should feel like opening an operator dossier, not a SaaS landing page. It should preserve the dark technical aesthetic but replace generic terminal cosplay with an inspectable architecture workbench: topology first, evidence second, docs paths third.
-
-## Current site gap
-
-GitHub Pages was configured but returned a Pages 404 because no workflow deployed a static artifact. This site exists to close that gap and turn the repo from source-only to publicly navigable documentation.
+The page should feel like the third member of the Rinha4 proof-dossier family. It opens like a hostile benchmark terminal, then proves itself through lane-labeled evidence and a runtime trace. The assembly identity should be obvious without pretending CI numbers are official hardware.
 
 ## A/B testing hypotheses
 
-- `control`: concise proof-led landing page with docs-first CTA.
-- `proof`: moves verification and result evidence into the hero for skeptical reviewers.
-- `architecture`: moves topology and fd-passing mechanics into the first viewport for systems readers.
+- `?ab=evidence`: leads with lane-labeled proof and corpus replay.
+- `?ab=ledger`: emphasizes provenance cards and source links.
+- `?ab=runtime`: emphasizes fd-passing, `_start`, and the syscall path.
 
 Primary success signals are GitHub Pages availability, docs route visits, GitHub source clicks, and reduced repeated questions about topology, verification, and what is assembly-only.
