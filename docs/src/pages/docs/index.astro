@@ -1,0 +1,39 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { base, docs, evidence } from '../../data/site';
+---
+<BaseLayout title="Docs | rinha4-yolo-mode" description="Documentation command center for the pure assembly Rinha4 YOLO-mode participant.">
+  <section class="docs-hero">
+    <p class="eyebrow">Documentation command center</p>
+    <h1>Understand, verify, then prepare a submission.</h1>
+    <p class="lede">This docs page is intentionally not a README mirror. It is a routing surface for reviewers who need architecture, verification, or submission readiness without digging through every source file first.</p>
+  </section>
+
+  <section class="docs-index" aria-label="Documentation routes">
+    {docs.map((doc, index) => (
+      <a class="doc-route" href={`${base}docs/${doc.slug}/`}>
+        <span class="route-number">0{index + 1}</span>
+        <div>
+          <p>{doc.intent}</p>
+          <h2>{doc.title}</h2>
+          <span>{doc.summary}</span>
+        </div>
+      </a>
+    ))}
+  </section>
+
+  <section class="workbench-section docs-evidence">
+    <div class="section-heading">
+      <p class="eyebrow">Evidence before interpretation</p>
+      <h2>Read the source trail while reading the docs.</h2>
+    </div>
+    <div class="evidence-table" role="table" aria-label="Evidence map">
+      {evidence.map((row) => (
+        <div class="evidence-line" role="row">
+          <strong role="cell">{row.source}</strong>
+          <span role="cell">{row.claim}</span>
+        </div>
+      ))}
+    </div>
+  </section>
+</BaseLayout>

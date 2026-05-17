@@ -1,0 +1,24 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { base, pages } from '../../data/site';
+
+export function getStaticPaths() {
+  return Object.entries(pages).map(([slug, page]) => ({ params: { slug }, props: { page, slug } }));
+}
+
+const { page } = Astro.props;
+---
+<BaseLayout title={`${page.title} | rinha4-yolo-mode docs`} description={`${page.title} documentation for rinha4-yolo-mode.`}>
+  <article class="article-shell">
+    <a class="back-link" href={`${base}docs/`}>Back to docs</a>
+    <p class="eyebrow">{page.kicker}</p>
+    <h1>{page.title}</h1>
+    {page.body.map((paragraph) => <p>{paragraph}</p>)}
+    <section class="checklist" aria-label="Relevant checks">
+      <h2>Checks and source cues</h2>
+      <ul>
+        {page.checks.map((check) => <li>{check}</li>)}
+      </ul>
+    </section>
+  </article>
+</BaseLayout>

@@ -1,0 +1,94 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { base, docs, evidence, facts } from '../data/site';
+---
+<BaseLayout title="rinha4-yolo-mode | Assembly architecture workbench">
+  <section class="hero shell-grid">
+    <div class="hero-copy">
+      <p class="eyebrow">Rinha de Backend 2026 participant</p>
+      <h1>Pure assembly API, fd-passing runtime, source-backed proof.</h1>
+      <p class="lede control-copy">A public workbench for Jonathan Peris' YOLO-mode participant: assembly API workers behind the shared ASM load balancer, documented with commands, topology, and verification gates.</p>
+      <p class="lede proof-copy">Start with proof: local smoke tests, corpus replay expectations, compose validation, and CI are exposed before the page asks you to trust any performance claim.</p>
+      <p class="lede architecture-copy">Start with architecture: one shared ASM load balancer accepts TCP, then hands client descriptors to two assembly API workers over Unix sockets.</p>
+      <div class="cta-row">
+        <a class="button primary" href={`${base}docs/`}>Open review docs</a>
+        <a class="button" href="https://github.com/jonathanperis/rinha4-yolo-mode">Inspect source</a>
+      </div>
+      <div class="variant-switcher" aria-label="A/B review variants">
+        <span>Review variant</span>
+        <a href={`${base}?ab=control`}>control</a>
+        <a href={`${base}?ab=proof`}>proof</a>
+        <a href={`${base}?ab=architecture`}>architecture</a>
+      </div>
+    </div>
+    <aside class="topology-card" aria-label="Runtime topology">
+      <div class="panel-heading">
+        <span>runtime topology</span>
+        <strong>fdpass stream</strong>
+      </div>
+      <div class="topology">
+        <div class="node judge">k6 / judge<br /><small>tcp :9999</small></div>
+        <div class="line" aria-hidden="true"></div>
+        <div class="node lb">shared asm lb<br /><small>SCM_RIGHTS handoff</small></div>
+        <div class="branch" aria-hidden="true"><span></span><span></span></div>
+        <div class="split">
+          <div class="node api">api1.sock<br /><small>/app/api</small></div>
+          <div class="node api">api2.sock<br /><small>/app/api</small></div>
+        </div>
+      </div>
+    </aside>
+  </section>
+
+  <section class="status-rail" aria-label="Key facts">
+    {facts.map((fact) => (
+      <div>
+        <span>{fact.label}</span>
+        <strong>{fact.value}</strong>
+      </div>
+    ))}
+  </section>
+
+  <section class="workbench-section proof-panel">
+    <div class="section-heading">
+      <p class="eyebrow">Evidence ledger</p>
+      <h2>Claims stay attached to files, commands, or workflows.</h2>
+    </div>
+    <div class="ledger">
+      {evidence.map((row) => (
+        <article class="ledger-row">
+          <div>
+            <h3>{row.claim}</h3>
+            <p>{row.detail}</p>
+          </div>
+          <code>{row.source}</code>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <section class="workbench-section docs-preview">
+    <div class="section-heading">
+      <p class="eyebrow">Docs command center</p>
+      <h2>Three routes for three review modes.</h2>
+    </div>
+    <div class="docs-lanes">
+      {docs.map((doc) => (
+        <a class="doc-lane" href={`${base}docs/${doc.slug}/`}>
+          <span>{doc.intent}</span>
+          <strong>{doc.title}</strong>
+          <p>{doc.summary}</p>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <section class="command-band">
+    <div>
+      <p class="eyebrow">Local verification</p>
+      <h2>Run the repo like a reviewer.</h2>
+    </div>
+    <pre><code>make clean test
+make corpus-replay
+docker compose config --quiet</code></pre>
+  </section>
+</BaseLayout>
