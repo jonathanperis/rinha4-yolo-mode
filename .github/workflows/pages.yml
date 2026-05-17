@@ -46,6 +46,9 @@ jobs:
         run: bun install --frozen-lockfile
       - name: Build Pages site
         working-directory: docs
+        env:
+          NODE_ENV: production
+          PUBLIC_GA_ID: G-94YRH12GC8
         run: bun run build
       - name: Upload artifact
         if: github.event_name != 'pull_request'

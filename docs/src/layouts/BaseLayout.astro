@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import Analytics from '../components/Analytics.astro';
 import { base, challengeUrl, nav } from '../data/site';
 
 interface Props {
@@ -42,6 +43,7 @@ const canonical = new URL(Astro.url.pathname, 'https://jonathanperis.github.io')
         <a href={challengeUrl}>official challenge</a>
       </footer>
     </div>
+    <Analytics />
     <script is:inline>
       const params = new URLSearchParams(window.location.search);
       const variant = params.get('ab');
