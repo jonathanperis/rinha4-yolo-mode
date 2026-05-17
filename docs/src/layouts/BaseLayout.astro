@@ -1,0 +1,53 @@
+---
+import '../styles/global.css';
+import { base, nav } from '../data/site';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = 'Pure assembly Rinha de Backend 2026 participant architecture workbench.' } = Astro.props;
+const canonical = new URL(Astro.url.pathname, 'https://jonathanperis.github.io').toString();
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta name="theme-color" content="#071016" />
+  </head>
+  <body data-ab="control">
+    <div class="noise" aria-hidden="true"></div>
+    <header class="site-header">
+      <a class="brand" href={base} aria-label="rinha4-yolo-mode home">
+        <span class="brand-mark">asm</span>
+        <span>rinha4-yolo-mode</span>
+      </a>
+      <nav aria-label="Primary navigation">
+        {nav.map((item) => <a href={item.href}>{item.label}</a>)}
+      </nav>
+    </header>
+    <main>
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <span>Assembly participant dossier.</span>
+      <a href="https://github.com/jonathanperis/rinha4-yolo-mode">Source on GitHub</a>
+    </footer>
+    <script is:inline>
+      const params = new URLSearchParams(window.location.search);
+      const variant = params.get('ab');
+      if (['control', 'proof', 'architecture'].includes(variant)) {
+        document.body.dataset.ab = variant;
+      }
+    </script>
+  </body>
+</html>
