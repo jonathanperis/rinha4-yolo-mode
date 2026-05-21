@@ -33,7 +33,7 @@ services:
           memory: "30M"
 
   api1:
-    image: "ghcr.io/jonathanperis/rinha4-yolo-mode@sha256:3494645b51c142e29153587e20ccd33d4158cdf917d9c7206936888b1e2a9490"
+    image: "ghcr.io/jonathanperis/rinha4-yolo-mode@sha256:dc35fd416f860fae601180c2a6720c050794cf4757fdb28f667e8bf4eeab38d3"
     pull_policy: always
     command: ["/app/api", "/tmp/rinha/api1.sock"]
     platform: linux/amd64
@@ -54,7 +54,7 @@ services:
           memory: "160M"
 
   api2:
-    image: "ghcr.io/jonathanperis/rinha4-yolo-mode@sha256:3494645b51c142e29153587e20ccd33d4158cdf917d9c7206936888b1e2a9490"
+    image: "ghcr.io/jonathanperis/rinha4-yolo-mode@sha256:dc35fd416f860fae601180c2a6720c050794cf4757fdb28f667e8bf4eeab38d3"
     pull_policy: always
     command: ["/app/api", "/tmp/rinha/api2.sock"]
     platform: linux/amd64
