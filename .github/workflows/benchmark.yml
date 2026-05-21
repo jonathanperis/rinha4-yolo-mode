@@ -15,7 +15,7 @@ on:
         type: choice
         options:
           - all-comparison
-          - competitor-compose/jonathanperis-yolo-candidate/docker-compose.yml
+          - competitor-compose/jonathanperis-latest/docker-compose.yml
           - competitor-compose/daniloitagyba-rinha-2026-dotnet/docker-compose.yml
           - competitor-compose/gabrielrauch-rinha-2026/docker-compose.yml
           - competitor-compose/crepao-da-massa-silent-index/docker-compose.yml
@@ -62,9 +62,8 @@ jobs:
       max-parallel: 2
       matrix:
         participant:
-          - name: jonathanperis-yolo-candidate
-            compose_file: competitor-compose/jonathanperis-yolo-candidate/docker-compose.yml
-          - name: jonathanperis-yolo-submission
+          - name: jonathanperis-latest
+            compose_file: competitor-compose/jonathanperis-latest/docker-compose.yml
           - name: daniloitagyba-rinha-2026-dotnet
             compose_file: competitor-compose/daniloitagyba-rinha-2026-dotnet/docker-compose.yml
           - name: gabrielrauch-rinha-2026
@@ -321,7 +320,7 @@ jobs:
             python3 -c "import json,pathlib,re,statistics,sys; name=sys.argv[1]; root=pathlib.Path(sys.argv[2]); rows=[json.load(open(p)) for p in sorted(root.glob('results-repetition-*.json'), key=lambda x:int(re.search(r'(\\d+)', x.name).group(1)))]; vals=[float(re.match(r'([0-9.]+)ms', str((d.get('result') or d).get('p99') or '')).group(1)) for d in rows]; clean=all(((d.get('result') or d).get('scoring') or {}).get('final_score') == 6000 and (((d.get('result') or d).get('scoring') or {}).get('breakdown') or {}).get('false_positive_detections') == 0 and (((d.get('result') or d).get('scoring') or {}).get('breakdown') or {}).get('false_negative_detections') == 0 and (((d.get('result') or d).get('scoring') or {}).get('breakdown') or {}).get('http_errors') == 0 for d in rows); print(f'REPETITION_SUMMARY {name} p99_ms={vals} median={statistics.median(vals):.3f} mean={statistics.mean(vals):.3f} clean={clean}')" "$name" "$results_dir"
           }
 
-          run_participant "jonathanperis-yolo-candidate" "competitor-compose/jonathanperis-yolo-candidate/docker-compose.yml"
+          run_participant "jonathanperis-latest" "competitor-compose/jonathanperis-latest/docker-compose.yml"
           run_participant "daniloitagyba-rinha-2026-dotnet" "competitor-compose/daniloitagyba-rinha-2026-dotnet/docker-compose.yml"
           run_participant "gabrielrauch-rinha-2026" "competitor-compose/gabrielrauch-rinha-2026/docker-compose.yml"
           run_participant "crepao-da-massa-silent-index" "competitor-compose/crepao-da-massa-silent-index/docker-compose.yml"
