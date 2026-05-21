@@ -16,7 +16,7 @@ on:
         options:
           - all-comparison
           - competitor-compose/jonathanperis-latest/docker-compose.yml
-          - competitor-compose/daniloitagyba-rinha-2026-dotnet/docker-compose.yml
+
           - competitor-compose/gabrielrauch-rinha-2026/docker-compose.yml
           - competitor-compose/crepao-da-massa-silent-index/docker-compose.yml
       official_ref:
@@ -52,8 +52,7 @@ jobs:
         participant:
           - name: jonathanperis-latest
             compose_file: competitor-compose/jonathanperis-latest/docker-compose.yml
-          - name: daniloitagyba-rinha-2026-dotnet
-            compose_file: competitor-compose/daniloitagyba-rinha-2026-dotnet/docker-compose.yml
+
           - name: gabrielrauch-rinha-2026
             compose_file: competitor-compose/gabrielrauch-rinha-2026/docker-compose.yml
           - name: crepao-da-massa-silent-index
@@ -271,7 +270,7 @@ jobs:
           }
 
           run_participant "jonathanperis-latest" "competitor-compose/jonathanperis-latest/docker-compose.yml"
-          run_participant "daniloitagyba-rinha-2026-dotnet" "competitor-compose/daniloitagyba-rinha-2026-dotnet/docker-compose.yml"
+
           run_participant "gabrielrauch-rinha-2026" "competitor-compose/gabrielrauch-rinha-2026/docker-compose.yml"
           run_participant "crepao-da-massa-silent-index" "competitor-compose/crepao-da-massa-silent-index/docker-compose.yml"
 
