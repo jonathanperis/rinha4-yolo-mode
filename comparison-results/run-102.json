@@ -1,0 +1,26 @@
+{
+  "event_name": "push",
+  "head_sha": "98240aeb267b0145d56a68dd82ee64ade6beab9d",
+  "results": [
+    {
+      "artifact": "rinha-benchmark-jonathanperis-yolo-candidate-102",
+      "false_negative_detections": 322,
+      "false_positive_detections": 845,
+      "final_score": 3497.5,
+      "http_errors": 0,
+      "p99": "0.25ms",
+      "participant": "jonathanperis-yolo-candidate"
+    },
+    {
+      "artifact": "rinha-benchmark-jonathanperis-yolo-submission-102",
+      "false_negative_detections": 322,
+      "false_positive_detections": 845,
+      "final_score": 3497.5,
+      "http_errors": 0,
+      "p99": "0.48ms",
+      "participant": "jonathanperis-yolo-submission"
+    }
+  ],
+  "run_id": "26237309429",
+  "run_number": "102"
+}

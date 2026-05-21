@@ -1,0 +1,26 @@
+{
+  "event_name": "workflow_dispatch",
+  "head_sha": "95ff6d8f5f9b478a797bb569a50540c5d8eefcc9",
+  "results": [
+    {
+      "artifact": "rinha-benchmark-mxlange-c-api-rinha2026-47",
+      "false_negative_detections": 0,
+      "false_positive_detections": 0,
+      "final_score": 6000,
+      "http_errors": 0,
+      "p99": "0.31ms",
+      "participant": "mxlange-c-api-rinha2026"
+    },
+    {
+      "artifact": "rinha-benchmark-ronieneubauer-rinha2026-47",
+      "false_negative_detections": 0,
+      "false_positive_detections": 0,
+      "final_score": 6000,
+      "http_errors": 0,
+      "p99": "0.39ms",
+      "participant": "ronieneubauer-rinha2026"
+    }
+  ],
+  "run_id": "25993137053",
+  "run_number": "47"
+}

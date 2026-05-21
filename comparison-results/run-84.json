@@ -1,0 +1,71 @@
+{
+  "event_name": "workflow_dispatch",
+  "head_sha": "82387c01ced1ed3cc1df634ae6939d0c9f9b7230",
+  "results": [
+    {
+      "artifact": "rinha-benchmark-jonathanperis-yolo-current-004-84",
+      "false_negative_detections": 0,
+      "false_positive_detections": 0,
+      "final_score": 6000,
+      "http_errors": 0,
+      "p99": "0.27ms",
+      "participant": "jonathanperis-yolo-current-004"
+    },
+    {
+      "artifact": "rinha-benchmark-jonathanperis-yolo-current-010-84",
+      "false_negative_detections": 0,
+      "false_positive_detections": 0,
+      "final_score": 6000,
+      "http_errors": 0,
+      "p99": "0.29ms",
+      "participant": "jonathanperis-yolo-current-010"
+    },
+    {
+      "artifact": "rinha-benchmark-jonathanperis-yolo-preinit-004-84",
+      "false_negative_detections": 0,
+      "false_positive_detections": 0,
+      "final_score": 6000,
+      "http_errors": 0,
+      "p99": "0.25ms",
+      "participant": "jonathanperis-yolo-preinit-004"
+    },
+    {
+      "artifact": "rinha-benchmark-jonathanperis-yolo-preinit-010-84",
+      "false_negative_detections": 0,
+      "false_positive_detections": 0,
+      "final_score": 6000,
+      "http_errors": 0,
+      "p99": "0.25ms",
+      "participant": "jonathanperis-yolo-preinit-010"
+    },
+    {
+      "artifact": "rinha-benchmark-jonathanperis-yolo-sndbuf-004-84",
+      "false_negative_detections": 0,
+      "false_positive_detections": 0,
+      "final_score": 6000,
+      "http_errors": 0,
+      "p99": "0.25ms",
+      "participant": "jonathanperis-yolo-sndbuf-004"
+    },
+    {
+      "artifact": "rinha-benchmark-jonathanperis-yolo-sndbuf-010-84",
+      "false_negative_detections": 0,
+      "false_positive_detections": 0,
+      "final_score": 6000,
+      "http_errors": 0,
+      "p99": "0.29ms",
+      "participant": "jonathanperis-yolo-sndbuf-010"
+    },
+    {
+      "artifact": "rinha-benchmark-ronieneubauer-rinha2026-84",
+      "false_negative_detections": 0,
+      "false_positive_detections": 0,
+      "final_score": 6000,
+      "http_errors": 0,
+      "p99": "0.30ms",
+      "participant": "ronieneubauer-rinha2026"
+    }
+  ],
+  "run_id": "26009908700",
+  "run_number": "84"
+}

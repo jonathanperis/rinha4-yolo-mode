@@ -1,0 +1,62 @@
+{
+  "event_name": "workflow_dispatch",
+  "head_sha": "865efd50e5b54b0cc45d411b8bf058a44f01ba2e",
+  "results": [
+    {
+      "artifact": "benchmark-results-jonathanperis-yolo-latest",
+      "false_negative_detections": 0,
+      "false_positive_detections": 0,
+      "final_score": 6000,
+      "http_errors": 0,
+      "p99": "0.29ms",
+      "participant": "jonathanperis-yolo-latest"
+    },
+    {
+      "artifact": "benchmark-results-jonathanperis-yolo-split-05",
+      "false_negative_detections": 0,
+      "false_positive_detections": 0,
+      "final_score": 6000,
+      "http_errors": 0,
+      "p99": "0.29ms",
+      "participant": "jonathanperis-yolo-split-05"
+    },
+    {
+      "artifact": "benchmark-results-jonathanperis-yolo-split-06",
+      "false_negative_detections": 0,
+      "false_positive_detections": 0,
+      "final_score": 6000,
+      "http_errors": 0,
+      "p99": "0.27ms",
+      "participant": "jonathanperis-yolo-split-06"
+    },
+    {
+      "artifact": "benchmark-results-jonathanperis-yolo-split-07",
+      "false_negative_detections": 0,
+      "false_positive_detections": 0,
+      "final_score": 6000,
+      "http_errors": 0,
+      "p99": "0.27ms",
+      "participant": "jonathanperis-yolo-split-07"
+    },
+    {
+      "artifact": "benchmark-results-jonathanperis-yolo-split-08",
+      "false_negative_detections": 0,
+      "false_positive_detections": 0,
+      "final_score": 6000,
+      "http_errors": 0,
+      "p99": "0.28ms",
+      "participant": "jonathanperis-yolo-split-08"
+    },
+    {
+      "artifact": "benchmark-results-ronieneubauer-rinha2026",
+      "false_negative_detections": 0,
+      "false_positive_detections": 0,
+      "final_score": 6000,
+      "http_errors": 0,
+      "p99": "0.30ms",
+      "participant": "ronieneubauer-rinha2026"
+    }
+  ],
+  "run_id": "26134733791",
+  "run_number": "98"
+}

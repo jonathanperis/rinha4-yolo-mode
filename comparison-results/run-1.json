@@ -1,0 +1,35 @@
+{
+  "event_name": "push",
+  "head_sha": "ab22cfd024ef281c36697bb071bc94252f877fce",
+  "results": [
+    {
+      "artifact": "rinha-benchmark-jonathanperis-c-latest-1",
+      "false_negative_detections": 0,
+      "false_positive_detections": 0,
+      "final_score": 6000,
+      "http_errors": 0,
+      "p99": "0.35ms",
+      "participant": "jonathanperis-c-latest"
+    },
+    {
+      "artifact": "rinha-benchmark-jonathanperis-dotnet-latest-1",
+      "false_negative_detections": 0,
+      "false_positive_detections": 0,
+      "final_score": 6000,
+      "http_errors": 0,
+      "p99": "0.36ms",
+      "participant": "jonathanperis-dotnet-latest"
+    },
+    {
+      "artifact": "rinha-benchmark-jonathanperis-yolo-latest-1",
+      "false_negative_detections": 532,
+      "false_positive_detections": 701,
+      "final_score": 3363.3,
+      "http_errors": 0,
+      "p99": "0.44ms",
+      "participant": "jonathanperis-yolo-latest"
+    }
+  ],
+  "run_id": "25952679032",
+  "run_number": "1"
+}

@@ -1,0 +1,35 @@
+{
+  "event_name": "workflow_dispatch",
+  "head_sha": "1ecd8e29e095ca8f60a131b11a11a6131e4ca513",
+  "results": [
+    {
+      "artifact": "rinha-benchmark-jonathanperis-yolo-latest-66",
+      "false_negative_detections": 0,
+      "false_positive_detections": 0,
+      "final_score": 6000,
+      "http_errors": 0,
+      "p99": "0.46ms",
+      "participant": "jonathanperis-yolo-latest"
+    },
+    {
+      "artifact": "rinha-benchmark-mxlange-c-api-rinha2026-66",
+      "false_negative_detections": 0,
+      "false_positive_detections": 0,
+      "final_score": 6000,
+      "http_errors": 0,
+      "p99": "0.31ms",
+      "participant": "mxlange-c-api-rinha2026"
+    },
+    {
+      "artifact": "rinha-benchmark-ronieneubauer-rinha2026-66",
+      "false_negative_detections": 0,
+      "false_positive_detections": 0,
+      "final_score": 6000,
+      "http_errors": 0,
+      "p99": "0.30ms",
+      "participant": "ronieneubauer-rinha2026"
+    }
+  ],
+  "run_id": "25999669404",
+  "run_number": "66"
+}
