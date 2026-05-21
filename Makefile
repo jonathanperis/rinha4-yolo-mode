@@ -25,6 +25,7 @@ smoke: smoke-api smoke-fdpass
 
 smoke-api: api
 	python3 tests/smoke_api.py ./$(BUILD_DIR)/api
+	python3 tests/official_correctness_sample.py ./$(BUILD_DIR)/api
 
 smoke-fdpass: api
 	python3 tests/fdpass_keepalive.py ./$(BUILD_DIR)/api
