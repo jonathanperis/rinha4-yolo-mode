@@ -357,32 +357,11 @@ fdpass_open_write_response:
     ret
 
 # Scoring strategy:
-# First use an exact lookup for the public official-like evaluation payload IDs
-# generated from the official test/test-data.json. If an ad-hoc/smoke payload is
-# not present in that public corpus, parse selected JSON fields, count fraud
-# signals, cap at five, and map to public response buckets.
+# Parse selected JSON fields, count fraud signals, cap at five, and map to the
+# public response buckets. The runtime intentionally does not use preview/test
+# evaluator request identifiers or precomputed label shortcuts; every request
+# follows the same payload-derived scoring path.
 choose_fraud_response:
-    # Fast exact path for the public official-like evaluation payloads. The
-    # request id is stable in test/test-data.json; falling back to the heuristic
-    # keeps smoke/ad-hoc payloads working without requiring an id match.
-    call tx_id_value
-    test eax, eax
-    jz score_heuristic_start
-    mov edi, eax
-    call official_lookup_approval
-    cmp eax, -1
-    je score_heuristic_start
-    test eax, eax
-    jz choose_exact_fraud
-    lea rsi, [rip + fraud0_response]
-    mov rdx, OFFSET FLAT:fraud0_response_len
-    ret
-choose_exact_fraud:
-    lea rsi, [rip + fraud5_response]
-    mov rdx, OFFSET FLAT:fraud5_response_len
-    ret
-
-score_heuristic_start:
     xor r11d, r11d
 
     call tx_count_value
@@ -1170,36 +1149,6 @@ parsed_bool_true:
     mov eax, 1
     ret
 
-official_lookup_approval:
-    # Input: edi = numeric transaction id from tx-<id>.
-    # Output: eax = 1 approved, 0 denied, -1 if the id is not in the public
-    # official evaluation sample. Binary search over sorted uint32 ids keeps the
-    # exact path fast and deterministic.
-    xor esi, esi
-    mov edx, OFFSET FLAT:official_lookup_count
-lookup_loop:
-    cmp esi, edx
-    jae lookup_not_found
-    mov eax, esi
-    add eax, edx
-    shr eax, 1
-    lea r8, [rip + official_lookup]
-    mov r9d, dword ptr [r8 + rax * 8]
-    cmp edi, r9d
-    je lookup_found
-    jb lookup_go_left
-    lea esi, [rax + 1]
-    jmp lookup_loop
-lookup_go_left:
-    mov edx, eax
-    jmp lookup_loop
-lookup_not_found:
-    mov eax, -1
-    ret
-lookup_found:
-    mov eax, dword ptr [r8 + rax * 8 + 4]
-    ret
-
 parse_string_after_key:
     # Return a pointer to the first byte inside a quoted value.
     mov ecx, 64
@@ -1278,9 +1227,6 @@ fraud_response_ptrs:
 fraud_response_lens:
     .long fraud0_response_len, fraud1_response_len, fraud2_response_len
     .long fraud3_response_len, fraud4_response_len, fraud5_response_len
-
-.align 4
-.include "src/api/official_lookup.inc"
 
 not_found_response:
     .ascii "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n"

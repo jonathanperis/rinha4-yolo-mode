@@ -7,10 +7,6 @@ on:
         description: Rinha official repo ref for the pinned EVALUATION/test suite
         required: true
         default: 64acf788baef3c1687bba93c04357cc8c7082b11
-      k6_image:
-        description: k6 Docker image used when benchmark_k6_mode=docker
-        required: true
-        default: grafana/k6:latest
       webapi_image:
         description: Optional prebuilt image; empty means build from checkout
         required: false
@@ -19,14 +15,7 @@ on:
         description: Number of k6 repetitions
         required: true
         default: "1"
-      benchmark_k6_mode:
-        description: k6 execution mode
-        required: true
-        default: native
-        type: choice
-        options:
-          - native
-          - docker
+
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -46,7 +35,6 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends curl git jq
 
       - name: Install native k6
-        if: inputs.benchmark_k6_mode == 'native'
         run: |
           curl -fsSL https://dl.k6.io/key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/k6-archive-keyring.gpg
           echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
@@ -65,8 +53,7 @@ jobs:
       - name: Run official-like benchmark
         env:
           OFFICIAL_REF: ${{ inputs.official_ref }}
-          K6_IMAGE: ${{ inputs.k6_image }}
-          BENCHMARK_K6_MODE: ${{ inputs.benchmark_k6_mode }}
+          BENCHMARK_K6_MODE: native
           WEBAPI_IMAGE: ${{ inputs.webapi_image }}
           BENCHMARK_PULL_IMAGE: ${{ inputs.webapi_image != '' && 'true' || 'false' }}
           BENCHMARK_NO_BUILD: ${{ inputs.webapi_image != '' && 'true' || 'false' }}

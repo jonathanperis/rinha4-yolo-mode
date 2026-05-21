@@ -5,8 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OFFICIAL_REPO="${OFFICIAL_REPO:-https://github.com/zanfranceschi/rinha-de-backend-2026.git}"
 OFFICIAL_REF="${OFFICIAL_REF:-64acf788baef3c1687bba93c04357cc8c7082b11}"
 RESULTS_DIR="${RESULTS_DIR:-benchmark-results}"
-K6_IMAGE="${K6_IMAGE:-grafana/k6:latest}"
-BENCHMARK_K6_MODE="${BENCHMARK_K6_MODE:-docker}"
+BENCHMARK_K6_MODE="${BENCHMARK_K6_MODE:-native}"
 BENCHMARK_PULL_IMAGE="${BENCHMARK_PULL_IMAGE:-false}"
 BENCHMARK_NO_BUILD="${BENCHMARK_NO_BUILD:-false}"
 BENCHMARK_REPETITIONS="${BENCHMARK_REPETITIONS:-1}"
@@ -83,39 +82,21 @@ chmod -R a+rwX "$RESULTS_DIR/official"
 for repetition in $(seq 1 "$BENCHMARK_REPETITIONS"); do
     echo "==> k6 repetition $repetition/$BENCHMARK_REPETITIONS"
     rm -f "$RESULTS_DIR/official/test/results.json" "$RESULTS_DIR/official/test/k6-report.html"
-    case "$BENCHMARK_K6_MODE" in
-        native)
-            if ! command -v k6 >/dev/null 2>&1; then
-                echo "BENCHMARK_K6_MODE=native requires k6 on PATH" >&2
-                exit 1
-            fi
-            (cd "$RESULTS_DIR/official" && bash ./run.sh > "../k6-output-repetition-$repetition.json")
-            ;;
-        docker)
-            docker run --rm \
-                --network host \
-                --user "$(id -u):$(id -g)" \
-                -e K6_NO_USAGE_REPORT=true \
-                -e K6_WEB_DASHBOARD=true \
-                -e K6_WEB_DASHBOARD_PORT=-1 \
-                -e K6_WEB_DASHBOARD_EXPORT=test/k6-report.html \
-                -v "$ROOT_DIR/$RESULTS_DIR/official:/official" \
-                -w /official \
-                "$K6_IMAGE" run test/test.js
-            ;;
-        *)
-            echo "Unsupported BENCHMARK_K6_MODE=$BENCHMARK_K6_MODE (expected native or docker)" >&2
-            exit 1
-            ;;
-    esac
+    if [[ "$BENCHMARK_K6_MODE" != "native" ]]; then
+        echo "Unsupported BENCHMARK_K6_MODE=$BENCHMARK_K6_MODE (only native is allowed)" >&2
+        exit 1
+    fi
+    if ! command -v k6 >/dev/null 2>&1; then
+        echo "BENCHMARK_K6_MODE=native requires k6 on PATH" >&2
+        exit 1
+    fi
+    (cd "$RESULTS_DIR/official" && bash ./run.sh > "../k6-output-repetition-$repetition.json")
     capture_docker_state "after-$repetition"
     result_file="$RESULTS_DIR/results-repetition-$repetition.json"
     cp "$RESULTS_DIR/official/test/results.json" "$result_file"
     repeat_files+=("$result_file")
     if [[ -f "$RESULTS_DIR/official/test/k6-report.html" ]]; then
         cp "$RESULTS_DIR/official/test/k6-report.html" "$RESULTS_DIR/k6-report-repetition-$repetition.html"
-    elif [[ "$BENCHMARK_K6_MODE" == "docker" ]]; then
-        echo "k6 HTML report was not generated for repetition $repetition" >&2
     fi
 done
 

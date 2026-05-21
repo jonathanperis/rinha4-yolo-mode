@@ -52,13 +52,18 @@ GitHub Actions now mirrors the early Rinha4 repo loop:
 - `Build and Release`: repeats tests, builds `linux/amd64`, publishes immutable `ci-<sha>` plus default tags to GHCR on `main`, and creates a release tag.
 - `Official-like Benchmark`: manual-only workflow for maturity tracking against the official k6 harness. It uploads artifacts but does not submit or promote this repo as an official Rinha candidate.
 
-## Purity rule
+## Rule-compliance guardrails
 
-Runtime implementation code in this repository must stay assembly-only. Build files, documentation, metadata, and external test harnesses are allowed, but no C/Rust/Go/Zig/C#/Java/etc. implementation files should be added.
+Runtime implementation code in this repository must stay assembly-only and must follow the Rinha rules:
+
+- no preview/test payload IDs, expected labels, or generated lookup tables in runtime sources;
+- no fraud-detection logic in the load balancer; it only distributes accepted sockets to API workers;
+- compose topology stays on bridge networking, with public linux/amd64 images and total limits at 1 CPU / 350 MB;
+- the public evaluator may be used only as a black-box benchmark/calibration gate, never as training data or a runtime reference.
 
 ## Official evaluation gate
 
-The manual `Official-like Benchmark` workflow and `scripts/ci-official-benchmark.sh` run the public Rinha 2026 k6 suite pinned to `645165cbc88a637c78bd6d5cc07bae4dbe422567` by default. See `docs/official-evaluation.md` for scoring thresholds and how to run the gate locally.
+The manual `Official-like Benchmark` workflow and `scripts/ci-official-benchmark.sh` run the public Rinha 2026 k6 suite pinned to `64acf788baef3c1687bba93c04357cc8c7082b11` by default. See `docs/official-evaluation.md` for scoring thresholds, rule limits, and how to run the gate locally.
 
 ## License
 

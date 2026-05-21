@@ -5,11 +5,18 @@ This repo uses the public Rinha de Backend 2026 test suite as an official-like r
 Pinned public evaluation reference:
 
 - upstream: `zanfranceschi/rinha-de-backend-2026`
-- ref: `645165cbc88a637c78bd6d5cc07bae4dbe422567`
+- ref: `64acf788baef3c1687bba93c04357cc8c7082b11`
 - docs: `docs/en/EVALUATION.md`
 - k6 script/data: `test/test.js`, `test/test-data.json`
 
-The official docs state the public k6 script may differ from the final evaluator, so local/GitHub runs here are calibration evidence, not automatic official promotion.
+The official docs state the public k6 script may differ from the final evaluator, so local/GitHub runs here are calibration evidence, not automatic official promotion. The public evaluator is used only as a black-box test harness: its payloads and expected labels must not be copied into runtime sources, generated into lookup artifacts, or used as fraud-reference data.
+
+## Rinha rules this gate must preserve
+
+- The official FAQ and submission docs forbid using test payloads as a reference or fraud lookup.
+- The load balancer must not inspect payloads, apply conditionals, respond early, or run detection logic.
+- The submitted topology must expose port `9999`, use bridge networking, avoid privileged/host modes, and fit inside 1 CPU / 350 MB total declared limits.
+- Submission images must be public and linux/amd64-compatible; source repositories must remain public and MIT-licensed.
 
 ## Score facts that matter
 
@@ -23,13 +30,13 @@ The official docs state the public k6 script may differ from the final evaluator
 ## Run locally
 
 ```sh
-OFFICIAL_REF=645165cbc88a637c78bd6d5cc07bae4dbe422567 \
+OFFICIAL_REF=64acf788baef3c1687bba93c04357cc8c7082b11 \
 BENCHMARK_REPETITIONS=3 \
-BENCHMARK_K6_MODE=docker \
+BENCHMARK_K6_MODE=native \
 bash scripts/ci-official-benchmark.sh
 ```
 
-For GitHub Actions, run the benchmark workflow and keep `official_ref=645165cbc88a637c78bd6d5cc07bae4dbe422567` unless intentionally checking a newer upstream test suite.
+For GitHub Actions, run the benchmark workflow and keep `official_ref=64acf788baef3c1687bba93c04357cc8c7082b11` unless intentionally checking a newer upstream test suite.
 
 ## Promotion interpretation
 
