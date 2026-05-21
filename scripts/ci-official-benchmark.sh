@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OFFICIAL_REPO="${OFFICIAL_REPO:-https://github.com/zanfranceschi/rinha-de-backend-2026.git}"
-OFFICIAL_REF="${OFFICIAL_REF:-645165cbc88a637c78bd6d5cc07bae4dbe422567}"
+OFFICIAL_REF="${OFFICIAL_REF:-64acf788baef3c1687bba93c04357cc8c7082b11}"
 RESULTS_DIR="${RESULTS_DIR:-benchmark-results}"
 K6_IMAGE="${K6_IMAGE:-grafana/k6:latest}"
 BENCHMARK_K6_MODE="${BENCHMARK_K6_MODE:-docker}"
@@ -36,7 +36,12 @@ capture_docker_state() {
     } > "$output" 2>&1 || true
 }
 
-git clone --depth 1 --branch "$OFFICIAL_REF" "$OFFICIAL_REPO" "$RESULTS_DIR/official"
+if ! git clone --depth 1 --branch "$OFFICIAL_REF" "$OFFICIAL_REPO" "$RESULTS_DIR/official"; then
+    rm -rf "$RESULTS_DIR/official"
+    git clone --filter=blob:none --no-checkout "$OFFICIAL_REPO" "$RESULTS_DIR/official"
+    git -C "$RESULTS_DIR/official" fetch --depth 1 origin "$OFFICIAL_REF"
+    git -C "$RESULTS_DIR/official" checkout --detach FETCH_HEAD
+fi
 
 cleanup() {
     docker compose "${compose_args[@]}" logs --no-color > "$RESULTS_DIR/docker-compose.log" 2>&1 || true
