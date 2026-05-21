@@ -6,7 +6,7 @@ on:
       official_ref:
         description: Rinha official repo ref for the pinned EVALUATION/test suite
         required: true
-        default: 645165cbc88a637c78bd6d5cc07bae4dbe422567
+        default: 64acf78
       k6_image:
         description: k6 Docker image used when benchmark_k6_mode=docker
         required: true
