@@ -57,7 +57,7 @@ Committed CRT dark. The family palette is black-green with amber and red proof a
 ## Component direction
 
 - **Hero:** `YOLO SIGNAL UNDER LOAD`, proof tags, CTAs, right-side benchmark console.
-- **Proof ledger:** three lane cards: assembly runtime, corpus replay, CI/deploy status.
+- **Proof ledger:** three lane cards: assembly runtime, runtime purity, CI/deploy status.
 - **Source strip:** split official/reference source from local YOLO evidence.
 - **Runtime trace:** five rows: ingress, fd pass, parse, score, respond.
 - **A/B surface:** `evidence`, `ledger`, `runtime` query variants.

@@ -16,13 +16,13 @@ export const nav = [
 
 export const heroTags = [
   { label: '[asm]', value: 'pure x86-64' },
-  { label: '[corpus]', value: '54100 clean' },
+  { label: '[purity]', value: 'no lookup' },
   { label: '[fdpass]', value: 'stream sockets' },
 ];
 
 export const consoleLines = [
   ['lane.asm_runtime', 'pure assembly api // _start // as + ld'],
-  ['lane.corpus_replay', '54100 total // 0 fp // 0 fn // 0 http errors'],
+  ['lane.runtime_purity', 'no test-payload lookup tables'],
   ['lane.ci', 'main branch // smoke + purity checks'],
   ['lane.pages', 'main branch // github pages deploy'],
   ['runtime', 'fdpass // unix sockets // prebuilt responses'],
@@ -45,17 +45,17 @@ export const proofCards = [
     cta: 'OPEN PURITY CHECK',
   },
   {
-    status: '[CORPUS-CLEAN]',
-    label: 'LOCAL REPLAY LANE',
-    title: '54100 cases',
+    status: '[PURITY-CLEAN]',
+    label: 'RUNTIME PURITY LANE',
+    title: 'No lookup tables',
     stats: [
-      ['FP', '0'],
-      ['FN', '0'],
-      ['HTTP', '0'],
+      ['PAYLOAD', 'field-derived'],
+      ['LOOKUP', 'blocked'],
+      ['ASM', 'only'],
     ],
-    body: 'Public corpus replay target is zero false positives, zero false negatives, zero HTTP errors, and zero score mismatches.',
-    href: `${repoUrl}/blob/main/tests/corpus_replay.py`,
-    cta: 'INSPECT REPLAY',
+    body: 'Runtime purity target is zero preview/test-payload lookup artifacts in shipped assembly sources.',
+    href: `${repoUrl}/blob/main/tests/check_purity.py`,
+    cta: 'INSPECT PURITY',
   },
   {
     status: '[CI-CLEAN]',
@@ -88,7 +88,7 @@ export const traceSteps = [
   ['01', 'Ingress', 'k6 / judge reaches :9999', 'The public boundary is the shared YOLO assembly load balancer.'],
   ['02', 'FD pass', 'SCM_RIGHTS over Unix sockets', 'Accepted client descriptors move to api1.sock and api2.sock without a second public TCP listener.'],
   ['03', 'Parse', 'manual HTTP + fraud fields', 'Assembly code reads only the bytes the workload needs for scoring and response selection.'],
-  ['04', 'Score', 'corpus table + branch-light path', 'The replay gate keeps shortcut decisions tied to the public corpus and score expectations.'],
+  ['04', 'Score', 'heuristic branch-light path', 'The purity gate keeps shortcut decisions tied to request payload fields, not preview/test payload IDs.'],
   ['05', 'Respond', 'prebuilt HTTP bytes out', 'Workers write prepared response bytes back on the inherited client descriptor.'],
 ];
 
@@ -96,13 +96,13 @@ export const abLanes = [
   {
     key: 'evidence',
     title: 'Evidence Terminal',
-    body: 'Default lane. Lead with assembly runtime, corpus replay, CI status, and caveats above the fold.',
+    body: 'Default lane. Lead with assembly runtime, runtime purity, CI status, and caveats above the fold.',
     href: `${base}?ab=evidence`,
   },
   {
     key: 'ledger',
     title: 'Benchmark Ledger',
-    body: 'Make provenance the lead object: source, run, compose, replay, workflow, and Pages deployment.',
+    body: 'Make provenance the lead object: source, run, compose, purity, workflow, and Pages deployment.',
     href: `${base}?ab=ledger`,
   },
   {
@@ -123,7 +123,7 @@ export const docs = [
   {
     slug: 'verification',
     title: 'Verification',
-    summary: 'Local commands, CI workflows, compose validation, and the public corpus replay gate.',
+    summary: 'Local commands, CI workflows, compose validation, and the public runtime purity gate.',
     intent: 'VERIFY THE LANE',
   },
   {
@@ -148,10 +148,10 @@ export const pages = {
     title: 'Verification',
     kicker: 'PROOF LEDGER',
     body: [
-      'The repo keeps a short verification loop for development and a heavier corpus replay when the official public dataset is available next to the workspace.',
+      'The repo keeps a short verification loop for development and a heavier runtime purity when the official reference rules is available next to the workspace.',
       'CI mirrors this maturity loop. It assembles the API, runs smoke tests, checks purity, validates compose, builds an amd64 image, and can run an official-like benchmark manually.',
     ],
-    checks: ['make clean test', 'make corpus-replay', 'docker compose config --quiet'],
+    checks: ['make clean test', 'python3 tests/check_purity.py', 'docker compose config --quiet'],
   },
   'benchmark-hygiene': {
     title: 'Benchmark hygiene',

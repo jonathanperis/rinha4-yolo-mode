@@ -4,7 +4,7 @@ _Last updated: 2026-05-18_
 
 ## Product identity
 
-`rinha4-yolo-mode` is Jonathan Peris' pure x86-64 assembly Rinha de Backend 2026 participant. The public Pages surface should read as the assembly sibling of the C and .NET proof dossiers, not as a separate portfolio microsite. It proves a specific runtime bet: assembly API workers, shared YOLO load balancer, fd-passing transport, and every claim tied to code, compose limits, CI, or replay artifacts.
+`rinha4-yolo-mode` is Jonathan Peris' pure x86-64 assembly Rinha de Backend 2026 participant. The public Pages surface should read as the assembly sibling of the C and .NET proof dossiers, not as a separate portfolio microsite. It proves a specific runtime bet: assembly API workers, shared YOLO load balancer, fd-passing transport, and every claim tied to code, compose limits, CI, or runtime-purity artifacts.
 
 ## Register
 
@@ -34,7 +34,7 @@ Visitors arrive skeptical. They need proof quickly: what is assembly, what is sh
 - Pure assembly API runtime, built with GNU `as` and `ld`.
 - Shared ASM load balancer default from `jonathanperis/rinha4-lb-yolo-mode`.
 - fd-passing topology: LB accepts TCP on `9999`, distributes accepted client FDs over Unix sockets to two API processes.
-- Current local corpus replay baseline reports `54100` total cases with `0` false positives, `0` false negatives, `0` HTTP errors, and `0` score mismatches when the official public corpus is available.
+- Current local validation focuses on assembly smoke/fd-pass behavior plus a purity gate that rejects preview/test-payload lookup artifacts in runtime sources.
 - GitHub Actions publishes immutable GHCR tags and runs CI, build/release, Pages, and manual official-like benchmark loops.
 
 ## Canonical facts for site copy
@@ -47,7 +47,7 @@ Visitors arrive skeptical. They need proof quickly: what is assembly, what is sh
 - LB default image: digest-pinned `ghcr.io/jonathanperis/rinha4-lb-yolo-mode` image from `docker-compose.yml`.
 - Default LB mode: `fdpass`, socket type `stream`, send buffer `262144`.
 - Resource split in compose: LB `0.04 CPU / 30M`, each API `0.48 CPU / 160M`.
-- Verification commands: `make clean test`, `make corpus-replay`, `docker compose config --quiet`.
+- Verification commands: `make clean test`, `docker compose config --quiet`.
 
 ## Brand voice
 
@@ -62,7 +62,7 @@ The page should feel like the third member of the Rinha4 proof-dossier family. I
 
 ## A/B testing hypotheses
 
-- `?ab=evidence`: leads with lane-labeled proof and corpus replay.
+- `?ab=evidence`: leads with lane-labeled proof and runtime purity.
 - `?ab=ledger`: emphasizes provenance cards and source links.
 - `?ab=runtime`: emphasizes fd-passing, `_start`, and the syscall path.
 

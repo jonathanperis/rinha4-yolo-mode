@@ -26,16 +26,14 @@ First fd-passing assembly API stack. The repository now builds only:
 
 The `docker-compose.yml` default uses a digest-pinned shared ASM LB image from `ghcr.io/jonathanperis/rinha4-lb-yolo-mode` in `fdpass`/`stream` mode instead of bundling a local YOLO LB binary.
 
-The current fraud implementation is benchmark-corpus exact first, heuristic fallback second. For official test IDs, the assembly API parses the `tx-...` id and probes a generated bucketed sorted assembly lookup table (`src/api/corpus_table.inc`) derived from `rinha-de-backend-2026/test/test-data.json`, returning the expected public fraud-score bucket. Unknown/non-corpus IDs fall back to the heuristic path: it parses multiple official JSON fields (`amount`, `installments`, `requested_at`, customer `avg_amount`, `tx_count_24h`, `known_merchants`, merchant `id`, `mcc`, merchant `avg_amount`, `is_online`, `card_present`, `km_from_home`, `last_transaction.timestamp`, `km_from_current`), applies a small MCC risk table, accumulates a capped fraud-count, and maps it to the public response buckets (`0.0`, `0.2`, `0.4`, `0.6`, `1.0`). This gets the current official-like corpus to zero local replay errors while preserving an assembly-only runtime; it is still **not the final general vector/index-search scorer**. CI is intentionally for our repo maturity loop only; official candidate promotion means an explicit submission to the Rinha repository after the assembly version is mature.
+The current fraud implementation is a general assembly heuristic path. It parses multiple official JSON fields (`amount`, `installments`, `requested_at`, customer `avg_amount`, `tx_count_24h`, `known_merchants`, merchant `id`, `mcc`, merchant `avg_amount`, `is_online`, `card_present`, `km_from_home`, `last_transaction.timestamp`, `km_from_current`), applies a small MCC risk table, accumulates a capped fraud-count, and maps it to the public response buckets (`0.0`, `0.2`, `0.4`, `0.6`, `1.0`). It intentionally does **not** use preview/test payload IDs or generated corpus lookup tables; every request follows the same payload-derived scoring path.
 
 ## Local verification
 
 ```sh
 make clean test
-make corpus-replay
 ```
 
-`make corpus-replay` expects the official test corpus at `../rinha-de-backend-2026/test/test-data.json` by default; override with `CORPUS_JSON=/path/to/test-data.json` if needed.
 
 Expected smoke-test output:
 
@@ -45,15 +43,6 @@ fdpass keepalive smoke passed
 purity check passed
 ```
 
-Expected corpus replay output on the current labeled corpus:
-
-```text
-total: 54100
-false positives: 0
-false negatives: 0
-http errors: 0
-score mismatches: 0
-```
 
 ## CI
 

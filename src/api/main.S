@@ -357,16 +357,11 @@ fdpass_open_write_response:
     ret
 
 # Scoring strategy:
-# 1. Exact public-corpus IDs use src/api/corpus_table.inc so local replay stays
-#    at 0 FP / 0 FN / 0 HTTP errors.
-# 2. Unknown IDs fall back to a tiny heuristic: parse selected JSON fields,
-#    count fraud signals, cap at five, and map to public response buckets.
-#    Three signals intentionally remains approved (0.4); four crosses to 0.6.
+# Parse selected JSON fields, count fraud signals, cap at five, and map to
+# public response buckets. Three signals intentionally remains approved (0.4);
+# four crosses to 0.6. The runtime must not use preview/test payload IDs as a
+# lookup table, so every request follows this same heuristic path.
 choose_fraud_response:
-    call corpus_score_bucket
-    cmp eax, -1
-    jne corpus_score_dispatch
-
     xor r11d, r11d
 
     call tx_count_value
@@ -479,8 +474,6 @@ score_dispatch_not_three:
     jne choose_fraud_by_bucket # 5 signals stay at 1.0
     mov eax, 3                 # 4 signals cross approval threshold at 0.6
     jmp choose_fraud_by_bucket
-corpus_score_dispatch:
-    jmp choose_fraud_by_bucket
 choose_fraud_by_bucket:
     # Bucket 0..5 maps directly to fraud_score 0.0, 0.2, ..., 1.0.
     lea r8, [rip + fraud_response_ptrs]
@@ -488,37 +481,6 @@ choose_fraud_by_bucket:
     lea r8, [rip + fraud_response_lens]
     mov edx, dword ptr [r8 + rax * 4]
     ret
-corpus_score_bucket:
-    # High 16 bits select a small sorted bucket; each bucket is linearly scanned
-    # for the tx id and returns the exact precomputed fraud-score bucket.
-    call tx_id_value
-    test eax, eax
-    jz corpus_score_not_found
-    mov r8d, eax                         # request tx numeric id
-    mov ecx, eax
-    shr ecx, 16                          # high 16 bits choose a tiny sorted bucket
-    lea rdx, [rip + corpus_bucket_offsets]
-    movzx r9d, word ptr [rdx + rcx * 2]     # lo
-    movzx r10d, word ptr [rdx + rcx * 2 + 2] # hi, exclusive
-    cmp r9d, r10d
-    jae corpus_score_not_found
-    lea r11, [rip + corpus_ids]
-    lea rdx, [rip + corpus_scores]
-corpus_search_loop:
-    mov eax, dword ptr [r11 + r9 * 4]
-    cmp r8d, eax
-    je corpus_score_found
-    inc r9d
-    cmp r9d, r10d
-    jb corpus_search_loop
-    jmp corpus_score_not_found
-corpus_score_found:
-    movzx eax, byte ptr [rdx + r9]
-    ret
-corpus_score_not_found:
-    mov eax, -1
-    ret
-
 tx_id_value:
     lea r8, [rip + request_buffer]
     mov ecx, dword ptr [rip + request_len]
@@ -1266,7 +1228,6 @@ fraud_response_lens:
     .long fraud0_response_len, fraud1_response_len, fraud2_response_len
     .long fraud3_response_len, fraud4_response_len, fraud5_response_len
 
-.include "src/api/corpus_table.inc"
 
 not_found_response:
     .ascii "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n"
