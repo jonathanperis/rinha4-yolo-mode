@@ -1,0 +1,24 @@
+# Build outputs
+build/
+dist/
+out/
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+
+# Local/editor files
+.env
+.env.*
+!.env.example
+.DS_Store
+.idea/
+.vscode/
+
+# Benchmark/runtime artifacts
+*.log
+results/
+reports/
+benchmark-results/

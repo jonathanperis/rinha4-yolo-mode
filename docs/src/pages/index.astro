@@ -1,0 +1,109 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { abLanes, base, consoleLines, heroTags, latestCiRun, latestPagesRun, localLinks, proofCards, repoUrl, sourceLinks, traceSteps } from '../data/site';
+---
+<BaseLayout title="rinha4-yolo-mode | YOLO SIGNAL UNDER LOAD">
+  <section class="hero" aria-label="YOLO SIGNAL UNDER LOAD.">
+    <div class="hero-copy">
+      <p class="eyebrow">RINHA 2026 // YOLO MODE // PURE ASM API</p>
+      <h1>YOLO SIGNAL<br />UNDER LOAD.</h1>
+      <p class="hero-summary evidence-copy">A public proof dossier for the assembly fraud scorer: lane-labeled evidence first, runtime path second, CI caveats always visible.</p>
+      <p class="hero-summary ledger-copy">Proof stays separated by lane: assembly runtime, corpus replay, GitHub Actions, Pages deployment, and reference-site lineage.</p>
+      <p class="hero-summary runtime-copy">TCP arrives at the shared ASM load balancer, client descriptors move over Unix sockets, and `_start` writes response bytes back.</p>
+      <div class="tag-strip" aria-label="Current evidence summary">
+        {heroTags.map((tag) => <span><strong>{tag.label}</strong> {tag.value}</span>)}
+      </div>
+      <div class="action-row">
+        <a class="button danger" href={latestCiRun}>VERIFY LATEST RUN</a>
+        <a class="button" href={`${base}docs/architecture/`}>TRACE HOT PATH</a>
+        <a class="button" href={latestPagesRun}>PAGES DEPLOY</a>
+      </div>
+    </div>
+    <aside class="console" aria-label="Benchmark provenance console">
+      <div class="console-title">RINHA4 YOLO BENCHMARK CONSOLE</div>
+      {consoleLines.map(([key, value]) => <p><span>&gt; {key}</span> {value}</p>)}
+      <p class="cursor"><span>&gt;</span></p>
+    </aside>
+  </section>
+
+  <section class="proof-ledger" aria-labelledby="ledger-title">
+    <div class="section-kicker">PROOF LEDGER</div>
+    <h2 id="ledger-title">ASM RUNTIME, CORPUS REPLAY, CI DEPLOYMENT.</h2>
+    <p>Every number below is lane-labeled. GitHub Actions evidence, local replay targets, and official hardware are not collapsed into one decorative counter.</p>
+    <div class="ledger-grid">
+      {proofCards.map((card) => (
+        <article class="proof-card">
+          <span class="status-chip">{card.status}</span>
+          <p class="card-label">{card.label}</p>
+          <h3>{card.title}</h3>
+          <dl>
+            {card.stats.map(([label, value]) => <><dt>{label}</dt><dd>{value}</dd></>)}
+          </dl>
+          <p>{card.body}</p>
+          <a href={card.href}>{card.cta}</a>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <section class="source-strip" aria-label="Source provenance">
+    <div>
+      <h2>OFFICIAL / REFERENCE SOURCE</h2>
+      <p>Challenge facts and reference implementations stay separate from YOLO CI evidence.</p>
+      <div class="mini-links">{sourceLinks.map((link) => <a href={link.href}>{link.label}</a>)}</div>
+    </div>
+    <div>
+      <h2>LOCAL YOLO EVIDENCE</h2>
+      <p><code>main</code> currently publishes a Pages artifact, CI smoke and purity checks, and an amd64 release build for the assembly candidate.</p>
+      <div class="mini-links">{localLinks.map((link) => <a href={link.href}>{link.label}</a>)}</div>
+    </div>
+  </section>
+
+  <section class="runtime-trace" aria-labelledby="trace-title">
+    <div class="section-kicker">RUNTIME TRACE</div>
+    <h2 id="trace-title">THE FAST PATH IS SHORT. THE CAVEAT IS VISIBLE.</h2>
+    <div class="trace-list">
+      {traceSteps.map(([num, title, code, text]) => (
+        <article>
+          <span>{num}</span>
+          <div>
+            <h3>{title}</h3>
+            <code>{code}</code>
+          </div>
+          <p>{text}</p>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <section class="ab-surface" aria-labelledby="ab-title">
+    <div class="section-kicker">A/B TEST SURFACE</div>
+    <h2 id="ab-title">THREE LANES TO TEST YOLO WITHOUT LOSING THE REFERENCE.</h2>
+    <div class="ab-grid">
+      {abLanes.map((lane, index) => (
+        <article>
+          <span>{String.fromCharCode(65 + index)}</span>
+          <h3>{lane.title}</h3>
+          <p>{lane.body}</p>
+          <a href={lane.href}>REVIEW {lane.key.toUpperCase()} LANE</a>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <section class="ci-stream" aria-label="CI benchmark stream">
+    <h2>CI BENCHMARK STREAM</h2>
+    <p>Candidate metrics are local evidence from GitHub Actions. Official hardware and reference-site proof remain separate lanes.</p>
+    <div class="stream-grid">
+      <div><strong>MAIN</strong><span>CI LANE</span></div>
+      <div><strong>0</strong><span>SMOKE FAILURES</span></div>
+      <div><strong>54100</strong><span>CORPUS TARGET</span></div>
+      <div><strong>LIVE</strong><span>PAGES DEPLOY</span></div>
+    </div>
+    <div class="action-row centered">
+      <a class="button" href={latestCiRun}>VIEW REPORT RUN</a>
+      <a class="button" href={`${base}docs/verification/`}>OPEN VERIFICATION DOCS</a>
+      <a class="button dashed" href={repoUrl}>SOURCE // ASM API</a>
+    </div>
+  </section>
+</BaseLayout>

@@ -1,0 +1,37 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { base, docs, localLinks, sourceLinks } from '../../data/site';
+---
+<BaseLayout title="DOCS | rinha4-yolo-mode" description="Documentation command center for the pure assembly Rinha4 YOLO-mode participant.">
+  <section class="docs-hero">
+    <p class="eyebrow">DOCUMENTATION COMMAND CENTER</p>
+    <h1>VERIFY THE LANE BEFORE THE CLAIM.</h1>
+    <p>Docs keep source evidence, runtime trace, and benchmark caveats visible before any performance claim.</p>
+  </section>
+
+  <section class="docs-index" aria-label="Documentation routes">
+    {docs.map((doc, index) => (
+      <a class="doc-route" href={`${base}docs/${doc.slug}/`}>
+        <span>{String(index + 1).padStart(2, '0')}</span>
+        <div>
+          <p>{doc.intent}</p>
+          <h2>{doc.title}</h2>
+          <em>{doc.summary}</em>
+        </div>
+      </a>
+    ))}
+  </section>
+
+  <section class="source-strip docs-strip" aria-label="Evidence map">
+    <div>
+      <h2>REFERENCE FAMILY</h2>
+      <p>The C and .NET pages remain reference context; this repo keeps its own evidence lane.</p>
+      <div class="mini-links">{sourceLinks.map((link) => <a href={link.href}>{link.label}</a>)}</div>
+    </div>
+    <div>
+      <h2>LOCAL EVIDENCE</h2>
+      <p>Use these links to inspect CI, deploy, and source state before treating a claim as current.</p>
+      <div class="mini-links">{localLinks.map((link) => <a href={link.href}>{link.label}</a>)}</div>
+    </div>
+  </section>
+</BaseLayout>
