@@ -367,7 +367,7 @@ choose_fraud_response:
     call tx_count_value
     cmp eax, 20
     jae score_tx_high
-    cmp eax, 10
+    cmp eax, 6
     jb score_amount
     inc r11d
     jmp score_amount
@@ -377,13 +377,13 @@ score_tx_high:
 score_amount:
     call amount_value
     mov r10d, eax
-    cmp eax, 10000
+    cmp eax, 500
     jb score_installments
     inc r11d
 
 score_installments:
     call installments_value
-    cmp eax, 10
+    cmp eax, 4
     jb score_online
     inc r11d
 
@@ -419,7 +419,7 @@ score_merchant_avg:
 
 score_km_home:
     call km_from_home_value
-    cmp eax, 500
+    cmp eax, 100
     jb score_mcc
     inc r11d
 
@@ -437,7 +437,7 @@ score_known_merchant:
 
 score_requested_hour:
     call requested_hour_value
-    cmp eax, 6
+    cmp eax, 7
     jb score_requested_hour_risky
     cmp eax, 22
     jb score_last_recent

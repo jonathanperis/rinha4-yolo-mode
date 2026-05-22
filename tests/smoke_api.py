@@ -57,11 +57,11 @@ CASES = [
     ),
     (
         b'{"id":"ratio-risk","transaction":{"amount":600,"installments":1},"customer":{"avg_amount":100,"tx_count_24h":0,"known_merchants":["MERC-001"]},"merchant":{"id":"MERC-001","mcc":"5912","avg_amount":600},"terminal":{"is_online":false,"card_present":true,"km_from_home":10}}',
-        b'{"approved":true,"fraud_score":0.2}',
+        b'{"approved":true,"fraud_score":0.4}',
     ),
     (
         b'{"id":"merchant-avg-ratio-risk","transaction":{"amount":600,"installments":1},"customer":{"avg_amount":600,"tx_count_24h":0,"known_merchants":["MERC-001"]},"merchant":{"id":"MERC-001","mcc":"5912","avg_amount":100},"terminal":{"is_online":false,"card_present":true,"km_from_home":10}}',
-        b'{"approved":true,"fraud_score":0.2}',
+        b'{"approved":true,"fraud_score":0.4}',
     ),
     (
         b'{"id":"merchant-geo-risk","transaction":{"amount":100,"installments":1},"customer":{"avg_amount":100,"tx_count_24h":0,"known_merchants":["MERC-001"]},"merchant":{"id":"MERC-999","mcc":"7995","avg_amount":100},"terminal":{"is_online":false,"card_present":true,"km_from_home":700}}',
@@ -85,6 +85,16 @@ CASES = [
     ),
     (
         b'{"id":"full-risk","transaction":{"amount":10000,"installments":12},"customer":{"tx_count_24h":20},"terminal":{"is_online":true,"card_present":false}}',
+        b'{"approved":false,"fraud_score":1.0}',
+    ),
+    # Documentation examples from DETECTION_RULES.md: one near-home known
+    # merchant legit request and one high-risk unknown merchant request.
+    (
+        b'{"id":"doc-legit","transaction":{"amount":41.12,"installments":2,"requested_at":"2026-03-11T18:45:53Z"},"customer":{"avg_amount":82.24,"tx_count_24h":3,"known_merchants":["MERC-003","MERC-016"]},"merchant":{"id":"MERC-016","mcc":"5411","avg_amount":60.25},"terminal":{"is_online":false,"card_present":true,"km_from_home":29.23},"last_transaction":null}',
+        b'{"approved":true,"fraud_score":0.0}',
+    ),
+    (
+        b'{"id":"doc-fraud","transaction":{"amount":9505.97,"installments":10,"requested_at":"2026-03-14T05:15:12Z"},"customer":{"avg_amount":81.28,"tx_count_24h":20,"known_merchants":["MERC-008","MERC-007","MERC-005"]},"merchant":{"id":"MERC-068","mcc":"7802","avg_amount":54.86},"terminal":{"is_online":false,"card_present":true,"km_from_home":952.27},"last_transaction":null}',
         b'{"approved":false,"fraud_score":1.0}',
     ),
 ]
