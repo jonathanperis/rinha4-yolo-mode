@@ -15,18 +15,32 @@ on:
         type: choice
         options:
           - all-comparison
-          - competitor-compose/jonathanperis-latest/docker-compose.yml
-
-          - competitor-compose/gabrielrauch-rinha-2026/docker-compose.yml
-          - competitor-compose/crepao-da-massa-silent-index/docker-compose.yml
+          - competitor-compose/dotnet-c-lb/docker-compose.yml
+          - competitor-compose/dotnet-asm-lb/docker-compose.yml
+          - competitor-compose/c-c-lb/docker-compose.yml
+          - competitor-compose/c-asm-lb/docker-compose.yml
+          - competitor-compose/yolo-c-lb/docker-compose.yml
+          - competitor-compose/yolo-asm-lb/docker-compose.yml
       official_ref:
         description: Rinha official repo ref for the pinned EVALUATION/test suite
         required: true
-        default: 64acf788baef3c1687bba93c04357cc8c7082b11
+        default: main
+      k6_image:
+        description: k6 Docker image used when benchmark_k6_mode=docker
+        required: true
+        default: grafana/k6:latest
       benchmark_repetitions:
         description: Number of k6 repetitions
         required: true
-        default: "1"
+        default: "5"
+      benchmark_k6_mode:
+        description: k6 execution mode
+        required: true
+        default: native
+        type: choice
+        options:
+          - native
+          - docker
       benchmark_runner:
         description: Matrix runs participants on separate runners; sequential runs all-comparison on one runner
         required: true
@@ -50,13 +64,18 @@ jobs:
       max-parallel: 2
       matrix:
         participant:
-          - name: jonathanperis-latest
-            compose_file: competitor-compose/jonathanperis-latest/docker-compose.yml
-
-          - name: gabrielrauch-rinha-2026
-            compose_file: competitor-compose/gabrielrauch-rinha-2026/docker-compose.yml
-          - name: crepao-da-massa-silent-index
-            compose_file: competitor-compose/crepao-da-massa-silent-index/docker-compose.yml
+          - name: dotnet-c-lb
+            compose_file: competitor-compose/dotnet-c-lb/docker-compose.yml
+          - name: dotnet-asm-lb
+            compose_file: competitor-compose/dotnet-asm-lb/docker-compose.yml
+          - name: c-c-lb
+            compose_file: competitor-compose/c-c-lb/docker-compose.yml
+          - name: c-asm-lb
+            compose_file: competitor-compose/c-asm-lb/docker-compose.yml
+          - name: yolo-c-lb
+            compose_file: competitor-compose/yolo-c-lb/docker-compose.yml
+          - name: yolo-asm-lb
+            compose_file: competitor-compose/yolo-asm-lb/docker-compose.yml
 
     permissions:
       contents: read
@@ -66,14 +85,6 @@ jobs:
       - name: Checkout
         if: ${{ github.event_name == 'push' || inputs.compose_file == matrix.participant.compose_file || inputs.compose_file == 'all-comparison' }}
         uses: actions/checkout@v6
-
-      - name: Log in to GHCR
-        if: ${{ github.event_name == 'push' || inputs.compose_file == matrix.participant.compose_file || inputs.compose_file == 'all-comparison' }}
-        uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install native k6
         if: ${{ github.event_name == 'push' || inputs.compose_file == matrix.participant.compose_file || inputs.compose_file == 'all-comparison' }}
@@ -88,60 +99,76 @@ jobs:
         if: ${{ github.event_name == 'push' || inputs.compose_file == matrix.participant.compose_file || inputs.compose_file == 'all-comparison' }}
         env:
           COMPOSE_FILE: ${{ matrix.participant.compose_file }}
-          OFFICIAL_REF: ${{ inputs.official_ref || '64acf788baef3c1687bba93c04357cc8c7082b11' }}
-          BENCHMARK_K6_MODE: native
-          BENCHMARK_REPETITIONS: ${{ inputs.benchmark_repetitions || '1' }}
+          OFFICIAL_REF: ${{ inputs.official_ref || 'main' }}
+          K6_IMAGE: ${{ inputs.k6_image || 'grafana/k6:latest' }}
+          BENCHMARK_K6_MODE: ${{ inputs.benchmark_k6_mode || 'native' }}
+          BENCHMARK_REPETITIONS: ${{ inputs.benchmark_repetitions || '5' }}
           RESULTS_DIR: benchmark-results-${{ matrix.participant.name }}
         run: |
           set -euo pipefail
           OFFICIAL_REPO="https://github.com/zanfranceschi/rinha-de-backend-2026.git"
           mkdir -p "$RESULTS_DIR"
           rm -rf "$RESULTS_DIR/official"
-          if ! git clone --depth 1 --branch "$OFFICIAL_REF" "$OFFICIAL_REPO" "$RESULTS_DIR/official"; then
-            rm -rf "$RESULTS_DIR/official"
-            git clone --filter=blob:none --no-checkout "$OFFICIAL_REPO" "$RESULTS_DIR/official"
-            git -C "$RESULTS_DIR/official" fetch --depth 1 origin "$OFFICIAL_REF"
-            git -C "$RESULTS_DIR/official" checkout --detach FETCH_HEAD
-          fi
+          git clone --depth 1 --branch "$OFFICIAL_REF" "$OFFICIAL_REPO" "$RESULTS_DIR/official"
           compose_args=(--compatibility -f "$COMPOSE_FILE")
 
           cleanup() {
+            docker compose "${compose_args[@]}" ps > "$RESULTS_DIR/docker-compose.ps" 2>&1 || true
             docker compose "${compose_args[@]}" logs --no-color > "$RESULTS_DIR/docker-compose.log" 2>&1 || true
+            docker inspect $(docker compose "${compose_args[@]}" ps -q) > "$RESULTS_DIR/docker-inspect.json" 2>/dev/null || true
             docker compose "${compose_args[@]}" down --volumes --remove-orphans > /dev/null 2>&1 || true
           }
           trap cleanup EXIT
 
           docker compose "${compose_args[@]}" pull
           docker compose "${compose_args[@]}" up -d --no-build
-            for attempt in {1..20}; do
-              if curl -fsS http://localhost:9999/ready > /dev/null 2>&1; then
-                break
-              fi
-              if [[ "$attempt" == "20" ]]; then
-                echo "Service did not become ready" >&2
-                exit 1
-              fi
-              sleep 3
-            done
+          for attempt in {1..20}; do
+            if curl -fsS http://localhost:9999/ready > /dev/null 2>&1; then
+              break
+            fi
+            if [[ "$attempt" == "20" ]]; then
+              echo "Service did not become ready" >&2
+              exit 1
+            fi
+            sleep 3
+          done
 
           chmod -R a+rwX "$RESULTS_DIR/official"
           repeat_files=()
           for repetition in $(seq 1 "$BENCHMARK_REPETITIONS"); do
             rm -f "$RESULTS_DIR/official/test/results.json" "$RESULTS_DIR/official/test/k6-report.html"
-            if [[ "$BENCHMARK_K6_MODE" != "native" ]]; then
-              echo "Unsupported BENCHMARK_K6_MODE=$BENCHMARK_K6_MODE (only native is allowed)" >&2
-              exit 1
-            fi
-            if ! command -v k6 >/dev/null 2>&1; then
-              echo "BENCHMARK_K6_MODE=native requires k6 on PATH" >&2
-              exit 1
-            fi
-            (cd "$RESULTS_DIR/official" && bash ./run.sh > "../k6-output-repetition-$repetition.json")
+            case "$BENCHMARK_K6_MODE" in
+              native)
+                if ! command -v k6 >/dev/null 2>&1; then
+                  echo "BENCHMARK_K6_MODE=native requires k6 on PATH" >&2
+                  exit 1
+                fi
+                (cd "$RESULTS_DIR/official" && bash ./run.sh > "../k6-output-repetition-$repetition.json")
+                ;;
+              docker)
+                docker run --rm \
+                  --network host \
+                  --user "$(id -u):$(id -g)" \
+                  -e K6_NO_USAGE_REPORT=true \
+                  -e K6_WEB_DASHBOARD=true \
+                  -e K6_WEB_DASHBOARD_PORT=-1 \
+                  -e K6_WEB_DASHBOARD_EXPORT=test/k6-report.html \
+                  -v "$PWD/$RESULTS_DIR/official:/official" \
+                  -w /official \
+                  "$K6_IMAGE" run test/test.js
+                ;;
+              *)
+                echo "Unsupported BENCHMARK_K6_MODE=$BENCHMARK_K6_MODE (expected native or docker)" >&2
+                exit 1
+                ;;
+            esac
             result_file="$RESULTS_DIR/results-repetition-$repetition.json"
             cp "$RESULTS_DIR/official/test/results.json" "$result_file"
             repeat_files+=("$result_file")
             if [[ -f "$RESULTS_DIR/official/test/k6-report.html" ]]; then
               cp "$RESULTS_DIR/official/test/k6-report.html" "$RESULTS_DIR/k6-report-repetition-$repetition.html"
+            elif [[ "$BENCHMARK_K6_MODE" == "docker" ]]; then
+              echo "k6 HTML report was not generated for repetition $repetition" >&2
             fi
           done
 
@@ -156,30 +183,25 @@ jobs:
           path: |
             benchmark-results-${{ matrix.participant.name }}/results.json
             benchmark-results-${{ matrix.participant.name }}/results-repetition-*.json
+            benchmark-results-${{ matrix.participant.name }}/repetition-summary.json
             benchmark-results-${{ matrix.participant.name }}/k6-output-repetition-*.json
             benchmark-results-${{ matrix.participant.name }}/k6-report-*.html
             benchmark-results-${{ matrix.participant.name }}/docker-compose.log
+            benchmark-results-${{ matrix.participant.name }}/docker-compose.ps
+            benchmark-results-${{ matrix.participant.name }}/docker-inspect.json
           if-no-files-found: ignore
 
   benchmark-sequential:
     name: same-runner sequential benchmark
     runs-on: ubuntu-latest
     timeout-minutes: 90
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.benchmark_runner == 'sequential' && inputs.compose_file == 'all-comparison' }}
+    if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.benchmark_runner == 'sequential' && inputs.compose_file == 'all-comparison') }}
     permissions:
       contents: read
       packages: read
-
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
-      - name: Log in to GHCR
-        uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install native k6
         run: |
@@ -207,11 +229,12 @@ jobs:
           } > benchmark-runner-metadata/host.txt
           cat benchmark-runner-metadata/host.txt
 
-      - name: Run all participants on the same runner
+      - name: Run all Jonathan implementations on the same runner
         env:
-          OFFICIAL_REF: ${{ inputs.official_ref || '64acf788baef3c1687bba93c04357cc8c7082b11' }}
-          BENCHMARK_K6_MODE: native
-          BENCHMARK_REPETITIONS: ${{ inputs.benchmark_repetitions || '1' }}
+          OFFICIAL_REF: ${{ inputs.official_ref || 'main' }}
+          K6_IMAGE: ${{ inputs.k6_image || 'grafana/k6:latest' }}
+          BENCHMARK_K6_MODE: ${{ inputs.benchmark_k6_mode || 'native' }}
+          BENCHMARK_REPETITIONS: ${{ inputs.benchmark_repetitions || '5' }}
         run: |
           set -euo pipefail
           OFFICIAL_REPO="https://github.com/zanfranceschi/rinha-de-backend-2026.git"
@@ -221,15 +244,9 @@ jobs:
             local compose_file="$2"
             local results_dir="benchmark-results-$name"
             local official_dir="$results_dir/official"
-            export WEBAPI_IMAGE=""
             mkdir -p "$results_dir"
             rm -rf "$official_dir"
-            if ! git clone --depth 1 --branch "$OFFICIAL_REF" "$OFFICIAL_REPO" "$official_dir"; then
-              rm -rf "$official_dir"
-              git clone --filter=blob:none --no-checkout "$OFFICIAL_REPO" "$official_dir"
-              git -C "$official_dir" fetch --depth 1 origin "$OFFICIAL_REF"
-              git -C "$official_dir" checkout --detach FETCH_HEAD
-            fi
+            git clone --depth 1 --branch "$OFFICIAL_REF" "$OFFICIAL_REPO" "$official_dir"
             compose_args=(--compatibility -f "$compose_file")
 
             cleanup_participant() {
@@ -247,7 +264,7 @@ jobs:
                 break
               fi
               if [[ "$attempt" == "20" ]]; then
-                echo "Service did not become ready" >&2
+                echo "Service did not become ready for $name" >&2
                 exit 1
               fi
               sleep 3
@@ -257,32 +274,51 @@ jobs:
             repeat_files=()
             for repetition in $(seq 1 "$BENCHMARK_REPETITIONS"); do
               rm -f "$official_dir/test/results.json" "$official_dir/test/k6-report.html"
-              if [[ "$BENCHMARK_K6_MODE" != "native" ]]; then
-                echo "Unsupported BENCHMARK_K6_MODE=$BENCHMARK_K6_MODE (only native is allowed)" >&2
-                exit 1
-              fi
-              if ! command -v k6 >/dev/null 2>&1; then
-                echo "BENCHMARK_K6_MODE=native requires k6 on PATH" >&2
-                exit 1
-              fi
-              (cd "$official_dir" && bash ./run.sh > "../k6-output-repetition-$repetition.json")
+              case "$BENCHMARK_K6_MODE" in
+                native)
+                  if ! command -v k6 >/dev/null 2>&1; then
+                    echo "BENCHMARK_K6_MODE=native requires k6 on PATH" >&2
+                    exit 1
+                  fi
+                  (cd "$official_dir" && bash ./run.sh > "../k6-output-repetition-$repetition.json")
+                  ;;
+                docker)
+                  docker run --rm \
+                    --network host \
+                    --user "$(id -u):$(id -g)" \
+                    -e K6_NO_USAGE_REPORT=true \
+                    -e K6_WEB_DASHBOARD=true \
+                    -e K6_WEB_DASHBOARD_PORT=-1 \
+                    -e K6_WEB_DASHBOARD_EXPORT=test/k6-report.html \
+                    -v "$PWD/$official_dir:/official" \
+                    -w /official \
+                    "$K6_IMAGE" run test/test.js
+                  ;;
+                *)
+                  echo "Unsupported BENCHMARK_K6_MODE=$BENCHMARK_K6_MODE (expected native or docker)" >&2
+                  exit 1
+                  ;;
+              esac
               result_file="$results_dir/results-repetition-$repetition.json"
               cp "$official_dir/test/results.json" "$result_file"
               repeat_files+=("$result_file")
               if [[ -f "$official_dir/test/k6-report.html" ]]; then
                 cp "$official_dir/test/k6-report.html" "$results_dir/k6-report-repetition-$repetition.html"
+              elif [[ "$BENCHMARK_K6_MODE" == "docker" ]]; then
+                echo "k6 HTML report was not generated for $name repetition $repetition" >&2
               fi
             done
 
             cp "${repeat_files[0]}" "$results_dir/results.json"
             jq . "$results_dir/results.json"
-            python3 -c "import json,pathlib,re,statistics,sys; name=sys.argv[1]; root=pathlib.Path(sys.argv[2]); rows=[json.load(open(p)) for p in sorted(root.glob('results-repetition-*.json'), key=lambda x:int(re.search(r'(\\d+)', x.name).group(1)))]; vals=[float(re.match(r'([0-9.]+)ms', str((d.get('result') or d).get('p99') or '')).group(1)) for d in rows]; clean=all(((d.get('result') or d).get('scoring') or {}).get('final_score') == 6000 and (((d.get('result') or d).get('scoring') or {}).get('breakdown') or {}).get('false_positive_detections') == 0 and (((d.get('result') or d).get('scoring') or {}).get('breakdown') or {}).get('false_negative_detections') == 0 and (((d.get('result') or d).get('scoring') or {}).get('breakdown') or {}).get('http_errors') == 0 for d in rows); print(f'REPETITION_SUMMARY {name} p99_ms={vals} median={statistics.median(vals):.3f} mean={statistics.mean(vals):.3f} clean={clean}')" "$name" "$results_dir"
           }
 
-          run_participant "jonathanperis-latest" "competitor-compose/jonathanperis-latest/docker-compose.yml"
-
-          run_participant "gabrielrauch-rinha-2026" "competitor-compose/gabrielrauch-rinha-2026/docker-compose.yml"
-          run_participant "crepao-da-massa-silent-index" "competitor-compose/crepao-da-massa-silent-index/docker-compose.yml"
+          run_participant "dotnet-c-lb" "competitor-compose/dotnet-c-lb/docker-compose.yml"
+          run_participant "dotnet-asm-lb" "competitor-compose/dotnet-asm-lb/docker-compose.yml"
+          run_participant "c-c-lb" "competitor-compose/c-c-lb/docker-compose.yml"
+          run_participant "c-asm-lb" "competitor-compose/c-asm-lb/docker-compose.yml"
+          run_participant "yolo-c-lb" "competitor-compose/yolo-c-lb/docker-compose.yml"
+          run_participant "yolo-asm-lb" "competitor-compose/yolo-asm-lb/docker-compose.yml"
 
       - name: Upload sequential benchmark artifacts
         if: ${{ always() }}
@@ -293,8 +329,12 @@ jobs:
             benchmark-runner-metadata/host.txt
             benchmark-results-*/results.json
             benchmark-results-*/results-repetition-*.json
+            benchmark-results-*/repetition-summary.json
+            benchmark-results-*/k6-output-repetition-*.json
+            benchmark-results-*/k6-report-*.html
             benchmark-results-*/docker-compose.log
             benchmark-results-*/docker-compose.ps
+            benchmark-results-*/docker-inspect.json
           if-no-files-found: ignore
 
   summarize:
@@ -324,7 +364,7 @@ jobs:
           import json, os, pathlib
           root = pathlib.Path('comparison-results/artifacts')
           rows = []
-          for p in sorted(root.glob('**/results.json')):
+          for p in sorted(root.glob('**/results*.json')):
               try:
                   d = json.load(open(p))
               except Exception:
@@ -338,8 +378,12 @@ jobs:
                   name = parent.removeprefix('benchmark-results-')
               else:
                   name = artifact.removeprefix('rinha-benchmark-').rsplit('-', 1)[0]
+              repetition = None
+              if p.name.startswith('results-repetition-'):
+                  repetition = int(p.stem.rsplit('-', 1)[1])
               rows.append({
                   'participant': name,
+                  'repetition': repetition,
                   'p99': r.get('p99'),
                   'final_score': sc.get('final_score'),
                   'false_positive_detections': bd.get('false_positive_detections'),
@@ -347,7 +391,7 @@ jobs:
                   'http_errors': bd.get('http_errors'),
                   'artifact': artifact,
               })
-          rows.sort(key=lambda x: x['participant'])
+          rows.sort(key=lambda x: (x['participant'], x['repetition'] is None, x['repetition'] or 0))
           out = {
               'run_id': os.environ.get('GITHUB_RUN_ID'),
               'run_number': os.environ.get('GITHUB_RUN_NUMBER'),
@@ -370,4 +414,3 @@ jobs:
           git commit -m "ci: archive comparison benchmark [skip ci]" || exit 0
           git pull --rebase origin "${GITHUB_REF_NAME:-comparison}"
           git push
-
