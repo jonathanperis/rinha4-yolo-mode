@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       official_ref:
-        description: Rinha official repo ref for the pinned EVALUATION/test suite
+        description: Rinha official repo ref for the current EVALUATION/test suite
         required: true
-        default: 64acf788baef3c1687bba93c04357cc8c7082b11
+        default: main
       webapi_image:
         description: Optional prebuilt image; empty means build from checkout
         required: false

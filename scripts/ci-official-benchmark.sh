@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OFFICIAL_REPO="${OFFICIAL_REPO:-https://github.com/zanfranceschi/rinha-de-backend-2026.git}"
-OFFICIAL_REF="${OFFICIAL_REF:-64acf788baef3c1687bba93c04357cc8c7082b11}"
+OFFICIAL_REF="${OFFICIAL_REF:-main}"
 RESULTS_DIR="${RESULTS_DIR:-benchmark-results}"
 BENCHMARK_K6_MODE="${BENCHMARK_K6_MODE:-native}"
 BENCHMARK_PULL_IMAGE="${BENCHMARK_PULL_IMAGE:-false}"

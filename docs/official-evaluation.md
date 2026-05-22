@@ -5,7 +5,7 @@ This repo uses the public Rinha de Backend 2026 test suite as an official-like r
 Pinned public evaluation reference:
 
 - upstream: `zanfranceschi/rinha-de-backend-2026`
-- ref: `64acf788baef3c1687bba93c04357cc8c7082b11`
+- ref: `main` unless a run explicitly documents another ref
 - docs: `docs/en/EVALUATION.md`
 - k6 script/data: `test/test.js`, `test/test-data.json`
 
@@ -30,13 +30,13 @@ The official docs state the public k6 script may differ from the final evaluator
 ## Run locally
 
 ```sh
-OFFICIAL_REF=64acf788baef3c1687bba93c04357cc8c7082b11 \
+OFFICIAL_REF=main \
 BENCHMARK_REPETITIONS=3 \
 BENCHMARK_K6_MODE=native \
 bash scripts/ci-official-benchmark.sh
 ```
 
-For GitHub Actions, run the benchmark workflow and keep `official_ref=64acf788baef3c1687bba93c04357cc8c7082b11` unless intentionally checking a newer upstream test suite.
+For GitHub Actions, run the benchmark workflow with the default `official_ref=main`. Only use an older ref for explicitly labeled historical/scoreboard reproduction, never for current promotion evidence.
 
 ## Promotion interpretation
 
