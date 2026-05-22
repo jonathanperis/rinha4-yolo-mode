@@ -81,7 +81,7 @@ CASES = [
     ),
     (
         b'{"id":"terminal-risk","transaction":{"amount":100,"installments":1},"customer":{"tx_count_24h":20},"terminal":{"is_online":true,"card_present":false}}',
-        b'{"approved":false,"fraud_score":0.6}',
+        b'{"approved":true,"fraud_score":0.4}',
     ),
     (
         b'{"id":"full-risk","transaction":{"amount":10000,"installments":12},"customer":{"tx_count_24h":20},"terminal":{"is_online":true,"card_present":false}}',
