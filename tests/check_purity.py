@@ -16,6 +16,13 @@ FORBIDDEN_RUNTIME_PATHS = {
     "src/api/corpus_table.inc",
     "src/api/official_lookup.inc",
 }
+FORBIDDEN_RUNTIME_NAME_MARKERS = {
+    "test-data",
+    "payload-label",
+    "expected-label",
+    "corpus-replay",
+}
+RUNTIME_ASSET_DIRS = {"src", "build"}
 FORBIDDEN_RUNTIME_MARKERS = {
     "rinha-de-backend-2026/test/test-data.json",
     "public-corpus IDs",
@@ -39,6 +46,11 @@ for path in Path(".").rglob("*"):
     if not path.is_file() or ".git" in path.parts or "__pycache__" in path.parts:
         continue
     path_str = str(path)
+    if path.parts[0] in RUNTIME_ASSET_DIRS:
+        lowered_name = path.name.lower()
+        for marker in FORBIDDEN_RUNTIME_NAME_MARKERS:
+            if marker in lowered_name:
+                violations.append(f"forbidden runtime lookup artifact name: {path_str}")
     if path_str == "tests/check_purity.py":
         continue
     if path_str in FORBIDDEN_RUNTIME_PATHS:

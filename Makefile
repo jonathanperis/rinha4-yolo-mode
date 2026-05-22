@@ -5,7 +5,7 @@ ASFLAGS ?= --64
 LDFLAGS ?= -nostdlib -static
 
 API_SRC := src/api/main.S
-.PHONY: all api test smoke smoke-api smoke-fdpass clean
+.PHONY: all api test smoke smoke-api smoke-fdpass oracle-smoke clean
 
 
 all: api
@@ -28,6 +28,9 @@ smoke-api: api
 
 smoke-fdpass: api
 	python3 tests/fdpass_keepalive.py ./$(BUILD_DIR)/api
+
+oracle-smoke: api
+	python3 tests/vector_oracle.py ./$(BUILD_DIR)/api
 
 test: smoke
 	python3 tests/check_purity.py
