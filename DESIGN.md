@@ -1,6 +1,6 @@
 # DESIGN.md: rinha4-yolo-mode Pages
 
-_Last updated: 2026-05-17_
+_Last updated: 2026-05-29_
 
 ## Design intent
 
@@ -57,9 +57,9 @@ Committed CRT dark. The family palette is black-green with amber and red proof a
 ## Component direction
 
 - **Hero:** `YOLO SIGNAL UNDER LOAD`, proof tags, CTAs, right-side benchmark console.
-- **Proof ledger:** three lane cards: assembly runtime, runtime purity, CI/deploy status.
+- **Proof ledger:** lane cards for assembly runtime, runtime purity, vector oracle calibration, fd-pass keepalive, and CI/deploy status.
 - **Source strip:** split official/reference source from local YOLO evidence.
-- **Runtime trace:** five rows: ingress, fd pass, parse, score, respond.
+- **Runtime trace:** five rows: ingress, fd pass, parse, score, respond; architecture docs should also expose the compose resource split and fd-pass knobs.
 - **A/B surface:** `evidence`, `ledger`, `runtime` query variants.
 - **CI stream:** latest run IDs and workflow states as evidence, not official hardware.
 
@@ -76,6 +76,7 @@ Committed CRT dark. The family palette is black-green with amber and red proof a
 - `bun install --frozen-lockfile` from `docs/`.
 - `bun run build` from `docs/`.
 - `make clean test` from repo root.
+- Optional `make oracle-smoke` from repo root when official reference resources are present.
 - `docker compose config --quiet` from repo root.
 - Smoke `/rinha4-yolo-mode/`, `/docs/`, `/docs/architecture/`, `/docs/verification/`, and A/B query URLs.
 - Visual check against the C and .NET reference family.

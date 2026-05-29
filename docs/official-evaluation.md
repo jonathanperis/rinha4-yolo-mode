@@ -38,6 +38,18 @@ bash scripts/ci-official-benchmark.sh
 
 For GitHub Actions, run the benchmark workflow with the default `official_ref=main`. Only use an older ref for explicitly labeled historical/scoreboard reproduction, never for current promotion evidence.
 
+Workflow/script controls:
+
+| GitHub input | Local env | Default | Meaning |
+| --- | --- | --- | --- |
+| `official_ref` | `OFFICIAL_REF` | `main` | Official repository ref to clone/fetch. |
+| `webapi_image` | `WEBAPI_IMAGE` | empty | Optional prebuilt API image; empty builds from the current checkout. |
+| `benchmark_repetitions` | `BENCHMARK_REPETITIONS` | `1` | Number of public k6 repetitions. Multi-run mode selects by median score, then median p99 among ties. |
+| — | `BENCHMARK_K6_MODE` | `native` | Native `k6` only. |
+| — | `RESULTS_DIR` | `benchmark-results` | Output directory for artifacts. |
+
+Retained artifacts include `results.json`, `results-repetition-*.json`, `repetition-summary.json`, `k6-output-repetition-*.json`, `k6-report*.html`, `docker-compose.log`, and `docker-state-*.txt`.
+
 ## Promotion interpretation
 
 - Correctness/stability gate: `false_positive_detections=0`, `false_negative_detections=0`, `http_errors=0` is the desired candidate lane.

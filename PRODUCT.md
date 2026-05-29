@@ -1,6 +1,6 @@
 # PRODUCT.md: rinha4-yolo-mode Pages
 
-_Last updated: 2026-05-18_
+_Last updated: 2026-05-29_
 
 ## Product identity
 
@@ -46,8 +46,8 @@ Visitors arrive skeptical. They need proof quickly: what is assembly, what is sh
 - API command in compose: `/app/api /tmp/rinha/api1.sock` and `/app/api /tmp/rinha/api2.sock`.
 - LB default image: digest-pinned `ghcr.io/jonathanperis/rinha4-lb-yolo-mode` image from `docker-compose.yml`.
 - Default LB mode: `fdpass`, socket type `stream`, send buffer `262144`.
-- Resource split in compose: LB `0.04 CPU / 30M`, each API `0.48 CPU / 160M`.
-- Verification commands: `make clean test`, `docker compose config --quiet`.
+- Resource split in compose: LB `0.06 CPU / 30M`, each API `0.47 CPU / 160M`; total declared envelope remains `1 CPU / 350 MB`.
+- Verification commands: `make clean test`, optional `make oracle-smoke`, `docker compose config --quiet`, and manual `Official-like Benchmark` / `scripts/ci-official-benchmark.sh` for public k6 calibration.
 
 ## Brand voice
 
