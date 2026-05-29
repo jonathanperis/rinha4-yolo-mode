@@ -132,12 +132,6 @@ export const docs = [
     summary: 'Image pinning, compose validation, artifact retention, and caveats before treating CI evidence as current.',
     intent: 'KEEP RUNS REPRODUCIBLE',
   },
-  {
-    slug: 'astro-64',
-    title: 'Astro 6.4 platform lane',
-    summary: 'Markdown processor API, Sätteri build coverage, and the Cloudflare routing boundary for static Pages.',
-    intent: 'INSPECT ASTRO 6.4',
-  },
 ];
 
 export const pages = {
