@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import json
 import pathlib
 import re
 import sys
@@ -30,6 +31,8 @@ def main() -> int:
     build_workflow = read(".github/workflows/build.yml")
     benchmark_script = read("scripts/ci-official-benchmark.sh")
     makefile = read("Makefile")
+    pages_workflow = read(".github/workflows/pages.yml")
+    docs_package = json.loads(read("docs/package.json"))
 
     # Compose resource split must match public/docs claims.
     require('cpus: "0.06"' in compose and 'memory: "30M"' in compose, "compose LB resource split changed")
@@ -63,6 +66,17 @@ def main() -> int:
         require(marker in build_workflow, f"build workflow missing expected marker {marker}")
     for doc_name, text in [("README.md", readme), ("docs/src/data/site.ts", site)]:
         require("ci-<" in text and "sha-*" in text and "docs/**" in text, f"{doc_name} missing release tag/path-filter documentation")
+
+    # Pages toolchain should stay on Astro 7 with Sätteri and managed background dev scripts documented.
+    deps = docs_package.get("dependencies", {})
+    scripts = docs_package.get("scripts", {})
+    require(str(deps.get("astro", "")).startswith("^7."), "docs package is not pinned to Astro 7")
+    require(str(deps.get("@astrojs/markdown-satteri", "")).startswith("^0.3."), "docs package is not using Astro 7-compatible Sätteri")
+    for script_name in ["dev:background", "dev:logs", "dev:stop"]:
+        require(script_name in scripts, f"docs package missing {script_name} script")
+    require("node-version: 24" in pages_workflow, "Pages workflow must keep Node 24 for Astro 7 builds")
+    for doc_name, text in [("README.md", readme), ("docs/src/data/site.ts", site)]:
+        require("Astro 7" in text and "Sätteri" in text, f"{doc_name} missing Astro 7/Sätteri documentation")
 
     print("docs drift check passed")
     return 0

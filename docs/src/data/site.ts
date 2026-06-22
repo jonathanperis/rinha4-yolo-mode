@@ -182,7 +182,7 @@ export const pages = {
     body: [
       'The normal local gate is make clean test: assemble the API, run direct TCP smoke, run fd-pass keepalive smoke, and reject runtime lookup artifacts with tests/check_purity.py.',
       'make oracle-smoke is optional and heavier. It runs tests/vector_oracle.py against official reference resources as a black-box calibration smoke; it must not generate payload-ID, expected-label, or lookup artifacts for runtime code.',
-      'CI mirrors the mandatory lane by running make clean test and docker compose config --quiet. The test target also runs a source-backed docs drift check for resource split, backlog, oracle, benchmark, and release-tag claims. Build and Release repeats the tests before publishing amd64 images, while Pages deploys this static dossier.',
+      'CI mirrors the mandatory lane by running make clean test and docker compose config --quiet. The test target also runs a source-backed docs drift check for resource split, backlog, oracle, benchmark, release-tag, and Astro 7 Pages-toolchain claims. Build and Release repeats the tests before publishing amd64 images, while Pages deploys this static dossier with Astro 7 and Sätteri.',
     ],
     checks: [
       'make clean test',

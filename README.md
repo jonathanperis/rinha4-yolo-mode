@@ -70,7 +70,7 @@ GitHub Actions now mirrors the early Rinha4 repo loop:
 
 - `CI`: assembles the API binary, runs the direct API smoke test, fd-pass keepalive smoke, runtime purity check, and validates `docker-compose.yml`.
 - `Build and Release`: repeats tests, builds `linux/amd64`, publishes GHCR tags on non-PR runs, and creates a semantic release tag on `main`. Tag families are `latest`, `v<major>.<minor>.<patch>`, immutable `ci-<full-sha>`, and the Docker metadata `sha-*` tag. The workflow ignores docs-only path changes (`docs/**`) unless manually dispatched.
-- `Deploy GitHub Pages`: builds the Astro proof dossier under `docs/` and publishes the static site.
+- `Deploy GitHub Pages`: builds the Astro 7 proof dossier under `docs/` with Sätteri Markdown processing and publishes the static site. Local docs development can use Astro 7's managed background dev-server scripts (`bun run dev:background`, `bun run dev:logs`, `bun run dev:stop`).
 - `Official-like Benchmark`: manual-only workflow for maturity tracking against the public Rinha 2026 k6 harness. It uploads artifacts but does not submit or promote this repo as an official Rinha candidate.
 
 ## Rule-compliance guardrails
