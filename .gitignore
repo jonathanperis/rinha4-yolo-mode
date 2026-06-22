@@ -2,6 +2,8 @@
 build/
 dist/
 out/
+node_modules/
+.astro/
 *.o
 *.a
 *.so
